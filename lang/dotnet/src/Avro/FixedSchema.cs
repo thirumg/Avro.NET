@@ -8,7 +8,8 @@ namespace Avro
     {
         public int Size { get; set; }
 
-        public FixedSchema(string name, string snamespace, int size):base(name, snamespace, null)
+        public FixedSchema(string name, string snamespace, int size)
+            : base(name, snamespace, null)
         {
             if (size <= 0) throw new ArgumentOutOfRangeException("size", "size must be greater than zero.");
             

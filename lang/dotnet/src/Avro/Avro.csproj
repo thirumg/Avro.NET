@@ -38,6 +38,8 @@
       <HintPath>..\contrib\Json35r6\Bin\DotNet20\Newtonsoft.Json.Net20.dll</HintPath>
     </Reference>
     <Reference Include="System" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="ArraySchema.cs" />
@@ -46,13 +48,17 @@
     <Compile Include="EnumSchema.cs" />
     <Compile Include="Field.cs" />
     <Compile Include="FixedSchema.cs" />
+    <Compile Include="JsonHelper.cs" />
     <Compile Include="Logger.cs" />
     <Compile Include="MapSchema.cs" />
+    <Compile Include="Message.cs" />
     <Compile Include="Name.cs" />
     <Compile Include="NamedSchema.cs" />
     <Compile Include="Names.cs" />
     <Compile Include="PrimitiveSchema.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Protocol.cs" />
+    <Compile Include="ProtocolParseException.cs" />
     <Compile Include="RecordSchema.cs" />
     <Compile Include="Schema.cs" />
     <Compile Include="SchemaParseException.cs" />

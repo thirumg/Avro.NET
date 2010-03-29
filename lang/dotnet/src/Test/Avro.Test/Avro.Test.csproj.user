@@ -4,4 +4,7 @@
     <StartAction>Program</StartAction>
     <StartProgram>C:\Program Files (x86)\NUnit 2.5.2\bin\net-2.0\nunit.exe</StartProgram>
   </PropertyGroup>
+  <PropertyGroup>
+    <ProjectView>ShowAllFiles</ProjectView>
+  </PropertyGroup>
 </Project>

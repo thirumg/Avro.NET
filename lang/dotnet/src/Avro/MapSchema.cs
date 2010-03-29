@@ -8,7 +8,7 @@ namespace Avro
     {
         public Schema Values { get; private set; }
         public MapSchema(Schema values)
-            :base(SchemaType.Map)
+            :base("map")
         {
             if (null == values) throw new ArgumentNullException("values", "values cannot be null.");
             this.Values = values;

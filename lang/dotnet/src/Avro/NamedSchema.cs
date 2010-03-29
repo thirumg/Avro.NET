@@ -13,26 +13,53 @@ namespace Avro
         {
             get
             {
-                return Avro.Name.make_fullname(this.Namespace, this.Namespace);
+                throw new NotImplementedException();
+                //return Avro.Name.make_fullname(this.Namespace, this.Namespace);
             }
         }
-        public NamedSchema(string name, string snamespace, Names names):base(SchemaType.Record)
+        public NamedSchema(string name, string snamespace, Names names)
+            : base("record")
         {
-            if (string.IsNullOrEmpty(name)) throw new ArgumentNullException("name", "name cannot be null.");
+            if(null==name)throw new ArgumentNullException("name", "name cannot be null.");
+            string full = Avro.Name.make_fullname(name, snamespace);
 
-            
+            if (PrimitiveSchema.PrimitiveKeyLookup.ContainsKey(full))
+            {
+                throw new SchemaParseException("Schemas may not be named after primitives: " + full);
+            }
+
+            this.Name = name;
+            //Avro.Name a = Avro.Name.extract_namespace(name, snamespace);
         }
 
 
-        public static readonly SchemaType[] SupportedTypes;
-
+        public static readonly string[] SupportedTypes;
+        public static readonly IDictionary<string, string> PrimitiveKeyLookup;
+        
 
         static NamedSchema()
         {
-            SupportedTypes = EnumHelper<SchemaType>.CreateArray(SchemaType.Fixed,
-                SchemaType.Enum,
-                SchemaType.Record,
-                SchemaType.Error);
+            SupportedTypes = new string[]{
+               "fixed",
+              "enum",
+              "record",
+              "error"
+            };
+
+            Dictionary<string, string> keylookup = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+            foreach (string key in SupportedTypes)
+            {
+                keylookup.Add(key, key);
+            }
+            PrimitiveKeyLookup = keylookup;
+        }
+
+        protected override void writeStartObject(Newtonsoft.Json.JsonTextWriter writer)
+        {
+            base.writeStartObject(writer);
+            JsonHelper.writeIfNotNullOrEmpty(writer, "name", this.Name);
+            JsonHelper.writeIfNotNullOrEmpty(writer, "namespace", this.Namespace);
+            
         }
     }
 }

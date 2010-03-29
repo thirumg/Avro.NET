@@ -39,8 +39,10 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ExampleProtocol.cs" />
     <Compile Include="ExampleSchema.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="TestProtocol.cs" />
     <Compile Include="TestSchema.cs" />
   </ItemGroup>
   <ItemGroup>

@@ -4,15 +4,27 @@ using System.Text;
 
 namespace Avro
 {
-    class UnionSchema:Schema
+    public class UnionSchema:Schema
     {
         public IList<Schema> Schemas { get; private set; }
 
         public UnionSchema(IEnumerable<Schema> schemas)
-            : base(SchemaType.Union)
+            : base("union")
         {
             if (null == schemas) throw new ArgumentNullException("schemas", "schemas cannot be null.");
             this.Schemas = new List<Schema>(schemas);
+        }
+
+        internal override void writeJson(Newtonsoft.Json.JsonTextWriter writer)
+        {
+            writer.WriteStartArray();
+
+            foreach (Schema schema in this.Schemas)
+            {
+                schema.writeJson(writer);
+            }
+
+            writer.WriteEndArray();
         }
     }
 }

@@ -480,15 +480,6 @@ namespace Avro
             Trace.TraceInformation(builder.ToString());
         }
 
-        public void DebugFormat(string format, object arg0)
-        {
-            if (!IsDebugEnabled) return;
-            StringBuilder builder = new StringBuilder();
-            builder.AppendFormat("{0} {1} - ", LEVEL_DEBUG, _Type.FullName);
-            builder.AppendFormat(format, arg0);
-            Trace.TraceInformation(builder.ToString());
-        }
-
         public void DebugFormat(string format, params object[] args)
         {
             if (!IsDebugEnabled) return;

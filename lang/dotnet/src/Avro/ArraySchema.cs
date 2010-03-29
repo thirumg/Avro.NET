@@ -9,7 +9,7 @@ namespace Avro
         public Schema Items { get; set; }
 
         public ArraySchema(Schema items)
-            : base(SchemaType.Array)
+            : base("array")
         {
             if (null == items) throw new ArgumentNullException("items", "items cannot be null.");
             this.Items = items;

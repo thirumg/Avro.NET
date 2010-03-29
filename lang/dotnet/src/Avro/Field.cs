@@ -35,6 +35,27 @@ namespace Avro
             if (null == type) throw new ArgumentNullException("type", "type cannot be null.");
 
             this.Type = type;
+            this.Name = name;
+        }
+
+        internal void writeJson(Newtonsoft.Json.JsonTextWriter writer)
+        {
+            writer.WriteStartObject();
+            JsonHelper.writeIfNotNullOrEmpty(writer, "name", this.Name);
+            JsonHelper.writeIfNotNullOrEmpty(writer, "namespace", this.Namespace);
+            JsonHelper.writeIfNotNullOrEmpty(writer, "doc", this.Doc);
+
+            if (null != this.Type)
+            {
+                writer.WritePropertyName("type");
+                this.Type.writeJson(writer);
+            }
+
+
+            
+
+
+            writer.WriteEndObject();
         }
     }
 }

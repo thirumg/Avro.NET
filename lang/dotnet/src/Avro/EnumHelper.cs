@@ -134,9 +134,9 @@ namespace Avro
 
 
 
-        public static string ToStringLower(SchemaType type)
-        {
-            return type.ToString().ToLower();
-        }
+        //public static string ToStringLower(SchemaType type)
+        //{
+        //    return type.ToString().ToLower();
+        //}
     }
 }

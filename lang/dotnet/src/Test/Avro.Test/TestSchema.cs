@@ -16,13 +16,13 @@ namespace Avro.Test
             examples.Add(new ExampleSchema("True", false));
             examples.Add(new ExampleSchema("{\"no_type\": \"test\"", false));
             examples.Add(new ExampleSchema("{\"type\": \"panther\"}", false));
-            foreach (SchemaType type in PrimitiveSchema.SupportedTypes)
+            foreach (string type in PrimitiveSchema.SupportedTypes)
             {
                 examples.Add(new ExampleSchema()
                 {
                     Valid = true,
                     SchemaString =
-                        string.Format("{{\"type\": \"{0}\"}}", EnumHelper<SchemaType>.ToStringLower(type))
+                        string.Format("{{\"type\": \"{0}\"}}", type)
                 });
             }
 
@@ -110,7 +110,39 @@ new ExampleSchema("{\"type\": \"record\",\"name\": \"Test\",\"fields\": [{\"name
             testExamples(examples);
 
         }
+        /// <summary>    
+        /// The fullname is determined in one of the following ways:
+        /// A name and namespace are both specified.  For example,
+        /// one might use "name": "X", "namespace": "org.foo"
+        /// to indicate the fullname "org.foo.X".
+        /// * A fullname is specified.  If the name specified contains
+        /// a dot, then it is assumed to be a fullname, and any
+        /// namespace also specified is ignored.  For example,
+        /// use "name": "org.foo.X" to indicate the
+        /// fullname "org.foo.X".
+        /// * A name only is specified, i.e., a name that contains no
+        /// dots.  In this case the namespace is taken from the most
+        /// tightly encosing schema or protocol.  For example,
+        /// if "name": "X" is specified, and this occurs
+        /// within a field of the record definition
+        /// of "org.foo.Y", then the fullname is "org.foo.X".
 
+        /// References to previously defined names are as in the latter
+        /// two cases above: if they contain a dot they are a fullname, if
+        /// they do not contain a dot, the namespace is the namespace of
+        /// the enclosing definition.
+
+        /// Primitive type names have no namespace and their names may
+        /// not be defined in any namespace.  A schema may only contain
+        /// multiple definitions of a fullname if the definitions are
+        /// equivalent.
+        /// </summary>
+        [Test]
+        public void test_fullname()
+        {
+            string fullname = Name.make_fullname("a", "o.a.h");
+            Assert.AreEqual(fullname, "o.a.h.a");
+        }
 
         private static void testExamples(IEnumerable<ExampleSchema> examples)
         {
