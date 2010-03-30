@@ -7,7 +7,7 @@ namespace Avro
     /// <summary>
     /// Deserialize Avro-encoded data into a .net data structure.
     /// </summary>
-    class DatumReader
+    public class DatumReader
     {
         public Schema WriterSchema { get; private set; }
         public Schema ReaderSchema { get; private set; }

@@ -8,7 +8,7 @@ namespace Avro
     /// <summary>
     /// Write leaf values.
     /// </summary>
-    class BinaryEncoder
+    public class BinaryEncoder
     {
         public Stream Stream { get; private set; }
         /// <summary>
@@ -59,14 +59,16 @@ namespace Avro
         /// <param name="datum"></param>
         public void write_long(long datum)
         {
-            throw new NotImplementedException();
-    //            datum = (datum << 1) ^ (datum >> 63)
-    //while ((datum & ~0x7F) != 0)
-    //{
-    //  write((datum & 0x7f) | 0x80));
-    //  datum >>= 7;
-    //write(chr(datum))
+            datum = (datum << 1) ^ (datum >> 63);
+            while ((datum & ~0x7F) != 0)
+            {
+                write((byte)((datum & 0x7f) | 0x80));
+                datum >>= 7;
+            }
+            write((byte)datum);
         }
+
+ 
         /// <summary>
         /// A float is written as 4 bytes.
         /// The float is converted into a 32-bit integer using a method equivalent to

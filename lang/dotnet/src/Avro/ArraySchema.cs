@@ -4,7 +4,7 @@ using System.Text;
 
 namespace Avro
 {
-    class ArraySchema:Schema
+    public class ArraySchema:Schema
     {
         public Schema Items { get; set; }
 

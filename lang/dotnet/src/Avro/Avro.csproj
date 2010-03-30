@@ -47,6 +47,7 @@
     <Compile Include="AvroTypeException.cs" />
     <Compile Include="BinaryDecoder.cs" />
     <Compile Include="BinaryEncoder.cs" />
+    <Compile Include="BooleanSchema.cs" />
     <Compile Include="DatumReader.cs" />
     <Compile Include="DatumWriter.cs" />
     <Compile Include="EnumHelper.cs" />
@@ -60,6 +61,7 @@
     <Compile Include="Name.cs" />
     <Compile Include="NamedSchema.cs" />
     <Compile Include="Names.cs" />
+    <Compile Include="NullSchema.cs" />
     <Compile Include="PrimitiveSchema.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Protocol.cs" />

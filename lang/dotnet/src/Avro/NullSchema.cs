@@ -4,10 +4,10 @@ using System.Text;
 
 namespace Avro
 {
-    public class AvroTypeException:AvroException
+    public class NullSchema:Schema
     {
-        public AvroTypeException(string s)
-            : base(s)
+        public NullSchema()
+            : base("null")
         {
 
         }

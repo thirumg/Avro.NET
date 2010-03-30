@@ -4,7 +4,7 @@ using System.Text;
 
 namespace Avro
 {
-    class MapSchema:Schema
+    public class MapSchema:Schema
     {
         public Schema Values { get; private set; }
         public MapSchema(Schema values)

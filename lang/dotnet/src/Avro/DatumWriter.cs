@@ -7,7 +7,7 @@ namespace Avro
     /// <summary>
     /// DatumWriter for generic python objects.
     /// </summary>
-    class DatumWriter
+    public class DatumWriter
     {
         public Schema WriterSchema { get; set; }
 

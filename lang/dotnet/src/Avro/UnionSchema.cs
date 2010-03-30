@@ -8,6 +8,15 @@ namespace Avro
     {
         public IList<Schema> Schemas { get; private set; }
 
+        public UnionSchema(params Schema[] schemas)
+            : base("union")
+        {
+            if (null == schemas || schemas.Length == 0) throw new ArgumentNullException("schemas", "schemas cannot be null or empty.");
+
+            this.Schemas = new List<Schema>(schemas);
+
+        }
+
         public UnionSchema(IEnumerable<Schema> schemas)
             : base("union")
         {

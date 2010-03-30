@@ -8,7 +8,7 @@ namespace Avro
     /// <summary>
     /// Read leaf values.
     /// </summary>
-    class BinaryDecoder
+    public class BinaryDecoder
     {
         public Stream Stream { get; private set; }
         public BinaryDecoder(Stream s)
@@ -27,7 +27,13 @@ namespace Avro
 
         private byte[] read(long p)
         {
-            throw new NotImplementedException();
+            byte[] buffer = new byte[p];
+
+            Stream.Read(buffer, 0, (int)p);
+
+            //TODO: This sucks fix it.
+
+            return buffer;
         }
 
         /// <summary>
@@ -67,7 +73,7 @@ namespace Avro
         /// <returns></returns>
         public long ReadLong()
         {
-            int b = ord(read(1));
+            byte b = ord(read(1));
             int n = b & 0x7F;
             int shift = 7;
             while ((b & 0x80) != 0)
