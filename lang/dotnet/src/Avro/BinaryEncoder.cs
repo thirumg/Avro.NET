@@ -59,13 +59,19 @@ namespace Avro
         /// <param name="datum"></param>
         public void write_long(long datum)
         {
-            datum = (datum << 1) ^ (datum >> 63);
-            while ((datum & ~0x7F) != 0)
+            ulong value = Util.Zig(datum);
+            byte[] buffer = new byte[10];
+            int ioIndex = 0;
+            int count = 0;
+            do
             {
-                write((byte)((datum & 0x7f) | 0x80));
-                datum >>= 7;
-            }
-            write((byte)datum);
+                buffer[ioIndex++] = (byte)((value & 0x7F) | 0x80);
+                count++;
+            } while ((value >>= 7) != 0);
+            buffer[ioIndex - 1] &= 0x7F;
+
+            Array.Resize<byte>(ref buffer, count);
+            write(buffer);
         }
 
  
@@ -87,7 +93,16 @@ namespace Avro
         /// <param name="datum"></param>
         public void write_double(double datum)
         {
+            long bits = BitConverter.DoubleToInt64Bits(datum);
 
+            write((byte)((bits) & 0xFF));
+            write((byte)((bits >> 8) & 0xFF));
+            write((byte)((bits >> 16) & 0xFF));
+            write((byte)((bits >> 24) & 0xFF));
+            write((byte)((bits >> 32) & 0xFF));
+            write((byte)((bits >> 40) & 0xFF));
+            write((byte)((bits >> 48) & 0xFF));
+            write((byte)((bits >> 56) & 0xFF));
         }
         /// <summary>
         /// Bytes are encoded as a long followed by that many bytes of data.

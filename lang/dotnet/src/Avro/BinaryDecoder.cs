@@ -73,16 +73,16 @@ namespace Avro
         /// <returns></returns>
         public long ReadLong()
         {
-            byte b = ord(read(1));
+            byte b = (byte)this.Stream.ReadByte();
             int n = b & 0x7F;
             int shift = 7;
             while ((b & 0x80) != 0)
             {
-                b = ord(read(1));
+                b = (byte)this.Stream.ReadByte();
                 n |= (b & 0x7F) << shift;
                 shift += 7;
             }
-            long datum = (n >> 1) ^ -(n & 1);
+            long datum =  (n >> 1) ^ -(n & 1);
             return datum;
         }
         /// <summary>
@@ -93,10 +93,10 @@ namespace Avro
         /// <returns></returns>
         public float ReadFloat()
         {
-            long bits = (((ord(read(1)) & 0xffL)) |
-            ((ord(read(1)) & 0xffL) << 8) |
-            ((ord(read(1)) & 0xffL) << 16) |
-            ((ord(read(1)) & 0xffL) << 24));
+            long bits = (this.Stream.ReadByte() & 0xffL |
+            (this.Stream.ReadByte()) & 0xffL << 8 |
+            (this.Stream.ReadByte()) & 0xffL << 16 |
+            (this.Stream.ReadByte()) & 0xffL << 24);
 
             
 
@@ -113,15 +113,16 @@ namespace Avro
         /// <returns></returns>
         public double ReadDouble()
         {
-            long bits = (((ord(read(1)) & 0xffL)) |
-              ((ord(read(1)) & 0xffL) << 8) |
-              ((ord(read(1)) & 0xffL) << 16) |
-              ((ord(read(1)) & 0xffL) << 24) |
-              ((ord(read(1)) & 0xffL) << 32) |
-              ((ord(read(1)) & 0xffL) << 40) |
-              ((ord(read(1)) & 0xffL) << 48) |
-              ((ord(read(1)) & 0xffL) << 56));
-            throw new NotSupportedException();
+            long bits = (this.Stream.ReadByte() & 0xffL) |
+              (this.Stream.ReadByte() & 0xffL) << 8 |
+              (this.Stream.ReadByte() & 0xffL) << 16 |
+              (this.Stream.ReadByte() & 0xffL) << 24 |
+              (this.Stream.ReadByte() & 0xffL) << 32 |
+              (this.Stream.ReadByte() & 0xffL) << 40 |
+              (this.Stream.ReadByte() & 0xffL) << 48 |
+              (this.Stream.ReadByte() & 0xffL) << 56;
+
+            return BitConverter.Int64BitsToDouble(bits);
         }
 
         /// <summary>
