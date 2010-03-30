@@ -44,6 +44,11 @@
   <ItemGroup>
     <Compile Include="ArraySchema.cs" />
     <Compile Include="AvroException.cs" />
+    <Compile Include="AvroTypeException.cs" />
+    <Compile Include="BinaryDecoder.cs" />
+    <Compile Include="BinaryEncoder.cs" />
+    <Compile Include="DatumReader.cs" />
+    <Compile Include="DatumWriter.cs" />
     <Compile Include="EnumHelper.cs" />
     <Compile Include="EnumSchema.cs" />
     <Compile Include="Field.cs" />
@@ -62,7 +67,9 @@
     <Compile Include="RecordSchema.cs" />
     <Compile Include="Schema.cs" />
     <Compile Include="SchemaParseException.cs" />
+    <Compile Include="SchemaResolutionException.cs" />
     <Compile Include="UnionSchema.cs" />
+    <Compile Include="Util.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

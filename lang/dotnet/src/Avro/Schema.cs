@@ -101,12 +101,12 @@ namespace Avro
                 //    throw new SchemaParseException(string.Format("Undefined type: \"{0}\"", stype));
                 //}
 
-                if (checkIsValue(type, PrimitiveSchema.SupportedTypes))
+                if (Util.checkIsValue(type, PrimitiveSchema.SupportedTypes))
                 {
                     if (log.IsDebugEnabled) log.DebugFormat("\"{0}\" is primitive to returning PrimitiveSchema", type);
                     return new PrimitiveSchema(type);
                 }
-                if (checkIsValue(type, NamedSchema.SupportedTypes))
+                if (Util.checkIsValue(type, NamedSchema.SupportedTypes))
                 {
                     if (log.IsDebugEnabled) log.DebugFormat("\"{0}\" is named.", type);
                     string sname = JsonHelper.getRequiredString(j, "name");
@@ -219,14 +219,14 @@ namespace Avro
 
 
 
-        static bool checkIsValue(string type, params string[] types)
-        {
-            foreach (string t in types)
-                if (t == type)
-                    return true;
+        //static bool checkIsValue(string type, params string[] types)
+        //{
+        //    foreach (string t in types)
+        //        if (t == type)
+        //            return true;
 
-            return false;
-        }
+        //    return false;
+        //}
 
         public static Schema Parse(string json)
         {
