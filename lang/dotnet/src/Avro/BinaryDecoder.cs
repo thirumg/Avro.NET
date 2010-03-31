@@ -93,15 +93,19 @@ namespace Avro
         /// <returns></returns>
         public float ReadFloat()
         {
-            long bits = (this.Stream.ReadByte() & 0xffL |
-            (this.Stream.ReadByte()) & 0xffL << 8 |
-            (this.Stream.ReadByte()) & 0xffL << 16 |
-            (this.Stream.ReadByte()) & 0xffL << 24);
-
+            byte[] buffer = read(4);
+            return BitConverter.ToSingle(buffer, 0);
             
+            //int bits = (this.Stream.ReadByte() & 0xff |
+            //(this.Stream.ReadByte()) & 0xff << 8 |
+            //(this.Stream.ReadByte()) & 0xff << 16 |
+            //(this.Stream.ReadByte()) & 0xff << 24);
+            //return intBitsToFloat(bits);
+        }
 
-            throw new NotImplementedException();
-
+        public static float intBitsToFloat(int value)
+        {
+            return BitConverter.ToSingle(BitConverter.GetBytes(value), 0);
         }
 
         /// <summary>

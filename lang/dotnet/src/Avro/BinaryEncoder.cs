@@ -83,7 +83,12 @@ namespace Avro
         /// <param name="datum"></param>
         public void write_float(float datum)
         {
-
+            //int bits = floatToRawIntBits(datum);
+            write(BitConverter.GetBytes(datum));
+            //write((byte)((bits) & 0xFF));
+            //write((byte)((bits >> 8) & 0xFF));
+            //write((byte)((bits >> 16) & 0xFF));
+            //write((byte)((bits >> 24) & 0xFF));
         }
         /// <summary>
         ///A double is written as 8 bytes.
@@ -122,6 +127,27 @@ namespace Avro
         {
             byte[] buffer = Encoding.UTF8.GetBytes(s);
             write_bytes(buffer);
+        }
+
+        [System.Runtime.InteropServices.StructLayout(System.Runtime.InteropServices.LayoutKind.Explicit)]
+        public class BitMem
+        {
+            [System.Runtime.InteropServices.FieldOffset(0)]
+            public float f;
+            [System.Runtime.InteropServices.FieldOffset(0)]
+            public int i;
+        }
+
+        public static int floatToRawIntBits(float f)
+        {
+            byte[] buffer = BitConverter.GetBytes(f);
+            Array.Reverse(buffer);
+            int value = BitConverter.ToInt32(buffer, 0);
+            return value; // System.Net.IPAddress.NetworkToHostOrder(value);
+
+            //BitMem bitMem = new BitMem();
+            //bitMem.f = f;
+            //return bitMem.i;
         }
     }
 }
