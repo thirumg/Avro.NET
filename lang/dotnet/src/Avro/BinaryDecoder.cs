@@ -14,7 +14,7 @@ namespace Avro
         public BinaryDecoder(Stream s)
         {
             if (null == s) throw new ArgumentNullException("s", "s cannot be null.");
-            this.Stream = s;
+            this.Stream = new BufferedStream(s);
         }
 
 
@@ -73,18 +73,25 @@ namespace Avro
         /// <returns></returns>
         public long ReadLong()
         {
-            byte b = (byte)this.Stream.ReadByte();
-            int n = b & 0x7F;
+            byte b = read();
+            ulong n = b & 0x7FUL;
             int shift = 7;
             while ((b & 0x80) != 0)
             {
-                b = (byte)this.Stream.ReadByte();
-                n |= (b & 0x7F) << shift;
+                b = read();
+                n |= (b & 0x7FUL) << shift;
                 shift += 7;
             }
-            long datum =  (n >> 1) ^ -(n & 1);
-            return datum;
+            return Util.Zag(n);
+
         }
+
+        private byte read()
+        {
+            return (byte)this.Stream.ReadByte();
+        }
+        
+
         /// <summary>
         /// A float is written as 4 bytes.
         /// The float is converted into a 32-bit integer using a method equivalent to
@@ -94,6 +101,10 @@ namespace Avro
         public float ReadFloat()
         {
             byte[] buffer = read(4);
+
+            if (!BitConverter.IsLittleEndian)
+                Array.Reverse(buffer);
+
             return BitConverter.ToSingle(buffer, 0);
             
             //int bits = (this.Stream.ReadByte() & 0xff |

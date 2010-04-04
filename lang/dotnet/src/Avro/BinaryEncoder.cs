@@ -18,7 +18,7 @@ namespace Avro
         public BinaryEncoder(Stream s)
         {
             if (null == s) throw new ArgumentNullException("s", "s cannot be null.");
-            this.Stream = s;
+            this.Stream = new BufferedStream(s);
         }
 
         private void write(params byte[] bytes)
@@ -59,19 +59,13 @@ namespace Avro
         /// <param name="datum"></param>
         public void write_long(long datum)
         {
-            ulong value = Util.Zig(datum);
-            byte[] buffer = new byte[10];
-            int ioIndex = 0;
-            int count = 0;
-            do
+            ulong n = Util.Zig(datum);// move sign to low-order bit
+            while ((n & ~0x7FUL) != 0)
             {
-                buffer[ioIndex++] = (byte)((value & 0x7F) | 0x80);
-                count++;
-            } while ((value >>= 7) != 0);
-            buffer[ioIndex - 1] &= 0x7F;
-
-            Array.Resize<byte>(ref buffer, count);
-            write(buffer);
+                write((byte)((n & 0x7f) | 0x80));
+                n >>= 7;
+            }
+            write((byte)n);
         }
 
  
@@ -83,8 +77,17 @@ namespace Avro
         /// <param name="datum"></param>
         public void write_float(float datum)
         {
+            byte[] buffer = null;
+            buffer = BitConverter.GetBytes(datum);
+            if (!BitConverter.IsLittleEndian)
+            {
+                Array.Reverse(buffer);
+            }
+
+            write(buffer);
+
             //int bits = floatToRawIntBits(datum);
-            write(BitConverter.GetBytes(datum));
+            //write(BitConverter.GetBytes(datum));
             //write((byte)((bits) & 0xFF));
             //write((byte)((bits >> 8) & 0xFF));
             //write((byte)((bits >> 16) & 0xFF));

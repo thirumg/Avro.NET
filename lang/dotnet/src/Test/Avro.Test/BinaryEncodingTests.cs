@@ -66,6 +66,7 @@ namespace Avro.Test
 
                 iostr.Position = 0;
                 BinaryDecoder decoder = new BinaryDecoder(iostr);
+                
                 string actual = decoder.ReadUTF8();
                 Assert.AreEqual(expectedValue, actual, "Iteration {0:###,###,###,##0}", i);
             }
