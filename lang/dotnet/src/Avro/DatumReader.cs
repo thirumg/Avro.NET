@@ -134,7 +134,7 @@ namespace Avro
             else if (Util.checkIsValue(writers_schema.Type, "record", "error", "request"))
                 return ReadRecord(writers_schema, readers_schema, decoder);
             else
-                throw new AvroException("Cannot Read unknown schema schema) " + writers_schema.Type);
+                throw new AvroException("Cannot Read unknown type type) " + writers_schema.Type);
         }
 
         public void SkipData(Schema writers_schema, BinaryDecoder decoder)
@@ -168,7 +168,7 @@ namespace Avro
             else if (Util.checkIsValue(writers_schema.Type, "record", "error", "request"))
                 SkipRecord(writers_schema as RecordSchema, decoder);
             else
-                throw new AvroException("Unknown schema schema: %s" + writers_schema.Type);
+                throw new AvroException("Unknown type type: %s" + writers_schema.Type);
 
         }
 

@@ -6,14 +6,17 @@ namespace Avro
 {
     public class EnumSchema:NamedSchema
     {
-        public string[] Symbols { get; set; }
+        public IList<string> Symbols { get; set; }
 
-        public EnumSchema(string name, string snamespace, string[] symbols, Names names)
-            : base("enum", name, snamespace, names)
+        public EnumSchema(Name name, IEnumerable<string> symbols, Names names)
+            : base("enum", name, names)
         {
-            if (null == symbols || symbols.Length == 0) throw new ArgumentNullException("symbols", "symbols cannot be null or empty.");
+            if (null == symbols) throw new ArgumentNullException("symbols", "symbols cannot be null or empty.");
 
-            this.Symbols = symbols;
+            this.Symbols = new List<string>(symbols);
+
+            if (this.Symbols.Count == 0) throw new ArgumentNullException("symbols", "symbols cannot be null or empty.");
+
         }
 
         protected override void WriteProperties(Newtonsoft.Json.JsonTextWriter writer)

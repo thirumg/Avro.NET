@@ -13,16 +13,14 @@ namespace Avro
         public Schema Response { get; set; }
         public UnionSchema Error { get; set; }
 
-        public Message(string name, string doc, IList<Schema> Request, Schema response, UnionSchema error)
+        public Message(string name, string doc, IList<Schema> request, Schema response, UnionSchema error)
         {
             if (string.IsNullOrEmpty(name)) throw new ArgumentNullException("name", "name cannot be null.");
-            this.Request = Request;
+            this.Request = request;
             this.Response = response;
             this.Error = error;
             this.Name = name;
             this.Doc = doc;
-
-
         }
 
         internal static Message Parse(Newtonsoft.Json.Linq.JProperty jmessage, Names names)
@@ -37,18 +35,18 @@ namespace Avro
 
             foreach (JToken jtype in jrequest)
             {
-                Schema schema = Schema.Parse(jtype, names);
+                Schema schema = Schema.ParseJson(jtype, names);
                 request.Add(schema);
             }
 
-            Schema response = Schema.Parse(jresponse, names);
+            Schema response = Schema.ParseJson(jresponse, names);
 
 
             
             UnionSchema uerrorSchema = null;
             if (null != jerrors)
             {
-                Schema errorSchema = Schema.Parse(jerrors, names);
+                Schema errorSchema = Schema.ParseJson(jerrors, names);
 
 
                 if (!(errorSchema is UnionSchema))

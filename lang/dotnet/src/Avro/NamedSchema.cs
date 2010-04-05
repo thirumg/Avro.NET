@@ -4,30 +4,31 @@ using System.Text;
 
 namespace Avro
 {
-    public class NamedSchema:Schema
+    public abstract class NamedSchema:Schema
     {
-        public string Name { get; set; }
-        public string Namespace { get; set; }
+        public Name Name { get; private set; }
+
+        public string Namespace
+        {
+            get { return this.Name.space; }
+        }
 
         public string FullName
         {
             get
             {
-
-
-                //throw new NotImplementedException();
-                return Avro.Name.make_fullname(this.Name, this.Namespace);
+                return this.Name.full;
             }
         }
-        public NamedSchema(string type, string name, string snamespace, Names names)
+        public NamedSchema(string type, Name name, Names names)
             : base(type)
         {
             if(null==name)throw new ArgumentNullException("name", "name cannot be null.");
-            string full = Avro.Name.make_fullname(name, snamespace);
+            
 
-            if (PrimitiveSchema.PrimitiveKeyLookup.ContainsKey(full))
+            if (PrimitiveSchema.PrimitiveKeyLookup.ContainsKey(name.full))
             {
-                throw new SchemaParseException("Schemas may not be named after primitives: " + full);
+                throw new SchemaParseException("Schemas may not be named after primitives: " + name.full);
             }
 
             this.Name = name;
@@ -56,10 +57,15 @@ namespace Avro
             PrimitiveKeyLookup = keylookup;
         }
 
+
+
+
         protected override void WriteProperties(Newtonsoft.Json.JsonTextWriter writer)
         {
             base.WriteProperties(writer);
-            JsonHelper.writeIfNotNullOrEmpty(writer, "name", this.Name);
+            this.Name.WriteJson(writer);
+
+            //JsonHelper.writeIfNotNullOrEmpty(writer, "name", this.Name);
             JsonHelper.writeIfNotNullOrEmpty(writer, "namespace", this.Namespace);
         }
     }

@@ -52,7 +52,7 @@ namespace Avro
         public static Schema Create(string json)
         {
             if (!IsPrimitive(json))
-                throw new NotSupportedException(json + " is not supported as a primitive schema.");
+                throw new NotSupportedException(json + " is not supported as a primitive type.");
             return new PrimitiveSchema(json.Trim('\"'));
         }
 

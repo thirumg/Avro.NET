@@ -9,6 +9,8 @@ namespace Avro
         public String name{get;set;}
         public String space { get; set; }
         public String full { get; set; }
+
+
         public Name(String name, String space)
         {
             if (name == null)
@@ -56,16 +58,33 @@ namespace Avro
         //}
 
     
-        public static string make_fullname(string name, string snamespace)
+        public static Name make_fullname(string name, string snamespace)
         {
-            if (string.IsNullOrEmpty(name)) throw new ArgumentNullException("name", "name cannot be null.");
+            return new Name(name, snamespace);
 
-            if (!name.Contains(".") && !string.IsNullOrEmpty(snamespace))
-            {
-                return string.Concat(snamespace, ".", name);
-            }
-            else
-                return name;
+
+            throw new NotImplementedException();
+            //if (string.IsNullOrEmpty(name)) throw new ArgumentNullException("name", "name cannot be null.");
+
+            //if (!name.Contains(".") && !string.IsNullOrEmpty(snamespace))
+            //{
+            //    return string.Concat(snamespace, ".", name);
+            //}
+            //else
+            //    return name;
+        }
+
+
+
+        internal static string make_fullname(Name name, string snamespace)
+        {
+            throw new NotImplementedException();
+        }
+
+        internal void WriteJson(Newtonsoft.Json.JsonTextWriter writer)
+        {
+            JsonHelper.writeIfNotNullOrEmpty(writer, "name", this.name);
+            JsonHelper.writeIfNotNullOrEmpty(writer, "namespace", this.space);
         }
     }
 }

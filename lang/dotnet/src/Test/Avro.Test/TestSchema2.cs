@@ -26,17 +26,17 @@ namespace Avro.Test
       + "  \"name\": \"outer_record\",\n"
       + "  \"doc\": \"This is not a world record.\",\n"
       + "  \"fields\": [\n"
-      + "    { \"schema\": { \"schema\": \"fixed\", \"doc\": \"Very Inner Fixed\", "
+      + "    { \"type\": { \"type\": \"fixed\", \"doc\": \"Very Inner Fixed\", "
       + "                  \"name\": \"very_inner_fixed\", \"size\": 1 },\n"
       + "      \"doc\": \"Inner Fixed\", \"name\": \"inner_fixed\" },\n"
-      + "    { \"schema\": \"string\",\n"
+      + "    { \"type\": \"string\",\n"
       + "      \"name\": \"inner_string\",\n"
       + "      \"doc\": \"Inner String\" },\n"
-      + "    { \"schema\": { \"schema\": \"enum\", \"doc\": \"Very Inner Enum\", \n"
+      + "    { \"type\": { \"type\": \"enum\", \"doc\": \"Very Inner Enum\", \n"
       + "                  \"name\": \"very_inner_enum\", \n"
       + "                  \"symbols\": [ \"A\", \"B\", \"C\" ] },\n"
       + "      \"doc\": \"Inner Enum\", \"name\": \"inner_enum\" },\n"
-      + "    { \"schema\": [\"string\", \"int\"], \"doc\": \"Inner Union\", \n"
+      + "    { \"type\": [\"string\", \"int\"], \"doc\": \"Inner Union\", \n"
       + "      \"name\": \"inner_union\" }\n" + "  ]\n" + "}\n";
 
 
@@ -162,7 +162,7 @@ namespace Avro.Test
         {
 
             check("{\"type\": \"fixed\", \"name\":\"Test\", \"size\": 1}", "\"a\"",
-                new FixedSchema("Test", null, 1), false);
+                new FixedSchema(new Name("Test", null), 1), false);
 
             //      new GenericData.Fixed(new byte[] { (byte)'a' }), false);
             checkParseError("{\"type\":\"fixed\"}");        // size required
@@ -325,7 +325,7 @@ namespace Avro.Test
         public void testNoDefaultField()
         {
             Schema expected = Schema.Parse("{\"type\":\"record\", \"name\":\"Foo\", \"fields\":" +
-               "[{\"name\":\"f\", \"schema\": \"string\"}]}");
+               "[{\"name\":\"f\", \"type\": \"string\"}]}");
             DatumReader input = new DatumReader(ACTUAL, expected);
             
 
@@ -337,9 +337,9 @@ namespace Avro.Test
         public void testEnumMismatch()
         {
             Schema actual = Schema.Parse
-              ("{\"schema\":\"enum\",\"name\":\"E\",\"symbols\":[\"X\",\"Y\"]}");
+              ("{\"type\":\"enum\",\"name\":\"E\",\"symbols\":[\"X\",\"Y\"]}");
             Schema expected = Schema.Parse
-              ("{\"schema\":\"enum\",\"name\":\"E\",\"symbols\":[\"Y\",\"Z\"]}");
+              ("{\"type\":\"enum\",\"name\":\"E\",\"symbols\":[\"Y\",\"Z\"]}");
             MemoryStream iostr = new MemoryStream();
             DatumWriter writer = new DatumWriter(actual);
             BinaryEncoder encoder = new BinaryEncoder(iostr);

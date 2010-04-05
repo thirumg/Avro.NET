@@ -140,7 +140,7 @@ new ExampleSchema("{\"type\": \"record\",\"name\": \"Test\",\"fields\": [{\"name
         [Test]
         public void test_fullname()
         {
-            string fullname = Name.make_fullname("a", "o.a.h");
+            string fullname = Name.make_fullname("a", "o.a.h").full;
             Assert.AreEqual(fullname, "o.a.h.a");
         }
 

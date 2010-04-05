@@ -86,11 +86,11 @@ namespace Avro
 
 
 
-        internal static Schema Parse(JToken j, Names names)
+        internal static Schema ParseJson(JToken j, Names names)
         {
-            if (log.IsDebugEnabled) log.DebugFormat("Parse(JToken, Names) - j = {0}, names = {1}", j, names);
+            if (log.IsDebugEnabled) log.DebugFormat("ParseJson(JToken, Names) - j = {0}, names = {1}", j, names);
             if (null == j) throw new ArgumentNullException("j", "j cannot be null.");
-            if (log.IsDebugEnabled) log.DebugFormat("Parse(JToken, Names) - j.GetType() == {0}", j.GetType());
+            if (log.IsDebugEnabled) log.DebugFormat("ParseJson(JToken, Names) - j.GetType() == {0}", j.GetType());
             if (j is JValue)
             {
                 string value = j.Value<string>();
@@ -99,6 +99,11 @@ namespace Avro
                 {
                     return new PrimitiveSchema(value);
                 }
+
+                Schema schema = null;
+                if (names.TryGetValue(value, out schema))
+                    return schema;
+
 
                 //return new NamedSchema(
 
@@ -114,7 +119,7 @@ namespace Avro
 
                 foreach(JToken jvalue in array)
                 {
-                    Schema unionTypes = Schema.Parse(jvalue, names);
+                    Schema unionTypes = Schema.ParseJson(jvalue, names);
                     schemas.Add(unionTypes);
                 }
 
@@ -125,7 +130,7 @@ namespace Avro
             {
 
                 string type = JsonHelper.getRequiredString(j, "type");
-                if (log.IsDebugEnabled) log.DebugFormat("Parse(JObject) - schema = \"{0}\"", type);
+                if (log.IsDebugEnabled) log.DebugFormat("ParseJson(JObject) - type = \"{0}\"", type);
                 //string type = SchemaType.Null;
 
                 //if (!EnumHelper<SchemaType>.TryParse(stype, out type))
@@ -145,7 +150,11 @@ namespace Avro
                     if (log.IsDebugEnabled) log.DebugFormat("\"{0}\" is named.", type);
                     string sname = JsonHelper.getRequiredString(j, "name");
                     string snamespace = JsonHelper.getOptionalString(j, "namespace");
-                    string name = Name.make_fullname(sname, snamespace);
+                    Name name = Name.make_fullname(sname, snamespace);
+
+                    
+
+
                     string doc = JsonHelper.getOptionalString(j, "doc");
 
                     switch (type)
@@ -157,7 +166,7 @@ namespace Avro
                             {
                                 throw new SchemaParseException("Could not parse \"" + ssize + "\" to int32.");
                             }
-                            schema = new FixedSchema(name, snamespace, size);
+                            schema = new FixedSchema(name, size);
                             break;
                         case "enum":
                             JArray jsymbols = j["symbols"] as JArray;
@@ -166,7 +175,7 @@ namespace Avro
                             {
                                 symbols.Add(jsymbol.Value<string>());
                             }
-                            schema = new EnumSchema(name, snamespace, symbols.ToArray(), names);
+                            schema = new EnumSchema(name, symbols, names);
                             break;
                         case "record":
                         case "error":
@@ -202,15 +211,17 @@ namespace Avro
                             
 
 
-                            schema = new RecordSchema(name, snamespace, fields, null);
+                            schema = new RecordSchema(name, fields, null);
                             break;
                     }
+
+                    if (null != name) names.Add(schema);
                 }
                 else if ("array" == type)
                 {
                     JToken items = j["items"];
                     //if (null == items) throw new AvroException("'items' cannot be null.");
-                    Schema arraySchema = Schema.Parse(items, names);
+                    Schema arraySchema = Schema.ParseJson(items, names);
 
                     if (log.IsDebugEnabled) log.DebugFormat("items = {0}", items.GetType());
 
@@ -219,7 +230,7 @@ namespace Avro
                 else if ("map" == type)
                 {
                     JToken values = j["values"];
-                    Schema valuesSchema = Schema.Parse(values, names);
+                    Schema valuesSchema = Schema.ParseJson(values, names);
                     return new MapSchema(valuesSchema);
                 }
 
@@ -283,7 +294,7 @@ namespace Avro
             JToken jtype = jfield["type"];
             if (null == jtype) 
                 throw new SchemaParseException("'type' was not found.");
-            Schema type = Schema.Parse(jtype, new Names());
+            Schema type = Schema.ParseJson(jtype, new Names());
 
             return new Field(type, name, false);
 
@@ -323,14 +334,19 @@ namespace Avro
 
         //    return false;
         //}
-
         public static Schema Parse(string json)
         {
-            if (log.IsDebugEnabled) log.DebugFormat("Parse(string) - json = \"{0}\"", json);
+            return Parse(json, null);
+        }
+
+        public static Schema Parse(string json, Names names)
+        {
+            if (log.IsDebugEnabled) log.DebugFormat("ParseJson(string) - json = \"{0}\"", json);
             if (string.IsNullOrEmpty(json)) throw new ArgumentNullException("json", "json cannot be null.");
+
+            if (null == names)
+                names = new Names();
             
-            
-            Names names = new Names();
 
             if (PrimitiveSchema.IsPrimitive(json))
             {
@@ -343,13 +359,13 @@ namespace Avro
 
                 JContainer j = IsArray ? (JContainer)JArray.Parse(json) : (JContainer)JObject.Parse(json);
                 
-                return Parse(j, names);
+                return ParseJson(j, names);
 
             }
 
             catch (Newtonsoft.Json.JsonSerializationException ex)
             {
-                if (log.IsWarnEnabled) log.Warn("Parse(string) - Exception thrown", ex);
+                if (log.IsWarnEnabled) log.Warn("ParseJson(string) - Exception thrown", ex);
                 throw new SchemaParseException("Could not parse " + Environment.NewLine + json);
             }
 

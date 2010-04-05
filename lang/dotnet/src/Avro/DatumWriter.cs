@@ -57,7 +57,7 @@ namespace Avro
             else if (Util.checkIsValue(writers_schema.Type, "record", "error", "request"))
                 write_record(writers_schema, datum, encoder);
             else
-                throw new AvroException("Unknown schema: " + writers_schema.Type);
+                throw new AvroException("Unknown type: " + writers_schema.Type);
 
         }
 

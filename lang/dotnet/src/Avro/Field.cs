@@ -13,9 +13,14 @@ namespace Avro
 
     public class Field
     {
+        /// <summary>
+        /// Field Name
+        /// </summary>
         public string Name { get; private set; }
-        
-        public string Doc { get; set; }
+        /// <summary>
+        /// Documentation
+        /// </summary>
+        public string Documentation { get; set; }
         public object Default { get; private set; }
         public bool HasDefault { get; private set; }
         public SortOrder? Order { get; private set; }
@@ -28,12 +33,12 @@ namespace Avro
 
         }
 
-        public Field(Schema schema, string name, bool hasDefault, object oDefault, SortOrder sortorder, Names names)
+        public Field(Schema type, string name, bool hasDefault, object oDefault, SortOrder sortorder, Names names)
         {
             if (string.IsNullOrEmpty(name)) throw new ArgumentNullException("name", "name cannot be null.");
-            if (null == schema) throw new ArgumentNullException("schema", "schema cannot be null.");
+            if (null == type) throw new ArgumentNullException("type", "type cannot be null.");
 
-            this.Type = schema;
+            this.Type = type;
             this.Name = name;
         }
 
@@ -41,7 +46,7 @@ namespace Avro
         {
             writer.WriteStartObject();
             JsonHelper.writeIfNotNullOrEmpty(writer, "name", this.Name);
-            JsonHelper.writeIfNotNullOrEmpty(writer, "doc", this.Doc);
+            JsonHelper.writeIfNotNullOrEmpty(writer, "doc", this.Documentation);
 
             if (null != this.Type)
             {

@@ -47,7 +47,7 @@ namespace Avro
             {
                 foreach (JToken jtype in jtypes)
                 {
-                    Schema schema = Schema.Parse(jtype, names);
+                    Schema schema = Schema.ParseJson(jtype, names);
                     types.Add(schema);
                 }
             }

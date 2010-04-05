@@ -17,15 +17,15 @@ namespace Avro.Test
   ""protocol"": ""HelloWorld"",
 
   ""types"": [
-    {""name"": ""Greeting"", ""schema"": ""record"", ""fields"": [
-      {""name"": ""message"", ""schema"": ""string""}]},
-    {""name"": ""Curse"", ""schema"": ""error"", ""fields"": [
-      {""name"": ""message"", ""schema"": ""string""}]}
+    {""name"": ""Greeting"", ""type"": ""record"", ""fields"": [
+      {""name"": ""message"", ""type"": ""string""}]},
+    {""name"": ""Curse"", ""type"": ""error"", ""fields"": [
+      {""name"": ""message"", ""type"": ""string""}]}
   ],
 
   ""messages"": {
     ""hello"": {
-      ""request"": [{""name"": ""greeting"", ""schema"": ""Greeting"" }],
+      ""request"": [{""name"": ""greeting"", ""type"": ""Greeting"" }],
       ""response"": ""Greeting"",
       ""errors"": [""Curse""]
     }
@@ -36,20 +36,20 @@ namespace Avro.Test
  ""protocol"": ""Simple"",
 
  ""types"": [
-     {""name"": ""Kind"", ""schema"": ""enum"", ""symbols"": [""FOO"",""BAR"",""BAZ""]},
+     {""name"": ""Kind"", ""type"": ""enum"", ""symbols"": [""FOO"",""BAR"",""BAZ""]},
 
-     {""name"": ""MD5"", ""schema"": ""fixed"", ""size"": 16},
+     {""name"": ""MD5"", ""type"": ""fixed"", ""size"": 16},
 
-     {""name"": ""TestRecord"", ""schema"": ""record"",
+     {""name"": ""TestRecord"", ""type"": ""record"",
       ""fields"": [
-          {""name"": ""name"", ""schema"": ""string"", ""order"": ""ignore""},
-          {""name"": ""kind"", ""schema"": ""Kind"", ""order"": ""descending""},
-          {""name"": ""hash"", ""schema"": ""MD5""}
+          {""name"": ""name"", ""type"": ""string"", ""order"": ""ignore""},
+          {""name"": ""kind"", ""type"": ""Kind"", ""order"": ""descending""},
+          {""name"": ""hash"", ""type"": ""MD5""}
       ]
      },
 
-     {""name"": ""TestError"", ""schema"": ""error"", ""fields"": [
-         {""name"": ""message"", ""schema"": ""string""}
+     {""name"": ""TestError"", ""type"": ""error"", ""fields"": [
+         {""name"": ""message"", ""type"": ""string""}
       ]
      }
 
@@ -58,22 +58,22 @@ namespace Avro.Test
  ""messages"": {
 
      ""hello"": {
-         ""request"": [{""name"": ""greeting"", ""schema"": ""string""}],
+         ""request"": [{""name"": ""greeting"", ""type"": ""string""}],
          ""response"": ""string""
      },
 
      ""echo"": {
-         ""request"": [{""name"": ""record"", ""schema"": ""TestRecord""}],
+         ""request"": [{""name"": ""record"", ""type"": ""TestRecord""}],
          ""response"": ""TestRecord""
      },
 
      ""add"": {
-         ""request"": [{""name"": ""arg1"", ""schema"": ""int""}, {""name"": ""arg2"", ""schema"": ""int""}],
+         ""request"": [{""name"": ""arg1"", ""type"": ""int""}, {""name"": ""arg2"", ""type"": ""int""}],
          ""response"": ""int""
      },
 
      ""echoBytes"": {
-         ""request"": [{""name"": ""data"", ""schema"": ""bytes""}],
+         ""request"": [{""name"": ""data"", ""type"": ""bytes""}],
          ""response"": ""bytes""
      },
 
@@ -91,18 +91,18 @@ namespace Avro.Test
  ""protocol"": ""TestNamespace"",
 
  ""types"": [
-     {""name"": ""org.apache.avro.test.util.MD5"", ""schema"": ""fixed"", ""size"": 16},
-     {""name"": ""TestRecord"", ""schema"": ""record"",
-      ""fields"": [ {""name"": ""hash"", ""schema"": ""org.apache.avro.test.util.MD5""} ]
+     {""name"": ""org.apache.avro.test.util.MD5"", ""type"": ""fixed"", ""size"": 16},
+     {""name"": ""TestRecord"", ""type"": ""record"",
+      ""fields"": [ {""name"": ""hash"", ""type"": ""org.apache.avro.test.util.MD5""} ]
      },
      {""name"": ""TestError"", ""namespace"": ""org.apache.avro.test.errors"",
-      ""schema"": ""error"", ""fields"": [ {""name"": ""message"", ""schema"": ""string""} ]
+      ""type"": ""error"", ""fields"": [ {""name"": ""message"", ""type"": ""string""} ]
      }
  ],
 
  ""messages"": {
      ""echo"": {
-         ""request"": [{""name"": ""record"", ""schema"": ""TestRecord""}],
+         ""request"": [{""name"": ""record"", ""type"": ""TestRecord""}],
          ""response"": ""TestRecord""
      },
 
@@ -129,7 +129,7 @@ namespace Avro.Test
      },
 
      ""write"": {
-         ""request"": [ {""name"": ""data"", ""schema"": ""bytes""} ],
+         ""request"": [ {""name"": ""data"", ""type"": ""bytes""} ],
          ""response"": ""null""
      }
 
