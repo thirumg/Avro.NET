@@ -4,11 +4,11 @@ using System.Text;
 
 namespace Avro
 {
-    public class Name
+    public class Name:IEquatable<Name>
     {
-        public String name{get;set;}
-        public String space { get; set; }
-        public String full { get; set; }
+        public String name{ get;private set;}
+        public String space { get; private set; }
+        public String full { get; private set; }
 
 
         public Name(String name, String space)
@@ -18,18 +18,24 @@ namespace Avro
                 this.name = this.space = this.full = null;
                 return;
             }
-            int lastDot = name.LastIndexOf('.');
-            if (lastDot < 0)
+
+            if(!name.Contains("."))
             {                          // unqualified name
                 this.space = space;                       // use default space
                 this.name = name;
             }
             else
-            {                                    // qualified name
-                this.space = name.Substring(0, lastDot);  // get space from name
-                this.name = name.Substring(lastDot + 1, name.Length);
+            {
+                string[] parts = name.Split('.');
+
+                this.space = string.Join(".", parts, 0, parts.Length - 2);
+                this.name = parts[0];
+                
+                // qualified name
+                //this.space = name.Substring(0, lastDot);  // get space from name
+                //this.name = name.Substring(lastDot + 1, name.Length-lastDot+1);
             }
-            this.full = (this.space == null) ? this.name : this.space + "." + this.name;
+            this.full = string.IsNullOrEmpty(this.space) ? this.name : this.space + "." + this.name;
         }
         public override bool Equals(Object o)
         {
@@ -40,7 +46,7 @@ namespace Avro
         }
         public override int GetHashCode()
         {
-            return full == null ? 0 : full.GetHashCode();
+            return string.IsNullOrEmpty(full)? 0 : full.GetHashCode();
         }
         public override string ToString()
         {
@@ -85,6 +91,16 @@ namespace Avro
         {
             JsonHelper.writeIfNotNullOrEmpty(writer, "name", this.name);
             JsonHelper.writeIfNotNullOrEmpty(writer, "namespace", this.space);
+        }
+
+        
+
+        public bool Equals(Name other)
+        {
+            if (null == other)
+                return false;
+
+            return this.full.Equals(other.full);
         }
     }
 }

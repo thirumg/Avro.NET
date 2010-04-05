@@ -36,6 +36,10 @@ namespace Avro
             foreach (JToken jtype in jrequest)
             {
                 Schema schema = Schema.ParseJson(jtype, names);
+
+                if (null == schema)
+                    throw new SchemaParseException(jtype.ToString());
+
                 request.Add(schema);
             }
 
@@ -82,6 +86,7 @@ namespace Avro
 
                 foreach (Schema schema in this.Request)
                 {
+                    System.Diagnostics.Debug.Assert(schema != null);
                     schema.writeJson(writer);
                 }
 

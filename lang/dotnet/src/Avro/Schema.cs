@@ -196,7 +196,7 @@ namespace Avro
                                         string fieldName = JsonHelper.getRequiredString(jfield, "name");
                                         if (log.IsDebugEnabled) log.DebugFormat("fieldname = \"{0}\"", fieldName);
 
-                                        Field field = createField(jfield);
+                                        Field field = createField(jfield, names);
                                         fields.Add(field);
                                     }
                                 }
@@ -215,7 +215,7 @@ namespace Avro
                             break;
                     }
 
-                    if (null != name) names.Add(schema);
+                    if (null != name&&!names.Contains(schema)) names.Add(schema);
                 }
                 else if ("array" == type)
                 {
@@ -233,7 +233,13 @@ namespace Avro
                     Schema valuesSchema = Schema.ParseJson(values, names);
                     return new MapSchema(valuesSchema);
                 }
-
+                else
+                {
+                    if (!names.TryGetValue(type, out schema))
+                    {
+                        throw new AvroTypeException("Type '" + type + "' is not a known type");
+                    }
+                }
                 
 
                 foreach (JToken p   in j.Children())
@@ -285,7 +291,7 @@ namespace Avro
 
 
 
-        static Field createField(JToken jfield)
+        static Field createField(JToken jfield, Names names)
         {
             if (log.IsDebugEnabled) log.DebugFormat("createField(JToken) - jfield = {0}", jfield);
             string name = JsonHelper.getRequiredString(jfield, "name");
@@ -294,7 +300,7 @@ namespace Avro
             JToken jtype = jfield["type"];
             if (null == jtype) 
                 throw new SchemaParseException("'type' was not found.");
-            Schema type = Schema.ParseJson(jtype, new Names());
+            Schema type = Schema.ParseJson(jtype, names);
 
             return new Field(type, name, false);
 
