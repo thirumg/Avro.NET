@@ -4,7 +4,7 @@ using System.Text;
 
 namespace Avro
 {
-    class NamedSchema:Schema
+    public class NamedSchema:Schema
     {
         public string Name { get; set; }
         public string Namespace { get; set; }
@@ -13,12 +13,14 @@ namespace Avro
         {
             get
             {
-                throw new NotImplementedException();
-                //return Avro.Name.make_fullname(this.Namespace, this.Namespace);
+
+
+                //throw new NotImplementedException();
+                return Avro.Name.make_fullname(this.Name, this.Namespace);
             }
         }
-        public NamedSchema(string name, string snamespace, Names names)
-            : base("record")
+        public NamedSchema(string type, string name, string snamespace, Names names)
+            : base(type)
         {
             if(null==name)throw new ArgumentNullException("name", "name cannot be null.");
             string full = Avro.Name.make_fullname(name, snamespace);
@@ -54,12 +56,11 @@ namespace Avro
             PrimitiveKeyLookup = keylookup;
         }
 
-        protected override void writeStartObject(Newtonsoft.Json.JsonTextWriter writer)
+        protected override void WriteProperties(Newtonsoft.Json.JsonTextWriter writer)
         {
-            base.writeStartObject(writer);
+            base.WriteProperties(writer);
             JsonHelper.writeIfNotNullOrEmpty(writer, "name", this.Name);
             JsonHelper.writeIfNotNullOrEmpty(writer, "namespace", this.Namespace);
-            
         }
     }
 }

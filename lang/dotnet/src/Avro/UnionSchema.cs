@@ -24,6 +24,7 @@ namespace Avro
             this.Schemas = new List<Schema>(schemas);
         }
 
+
         internal override void writeJson(Newtonsoft.Json.JsonTextWriter writer)
         {
             writer.WriteStartArray();

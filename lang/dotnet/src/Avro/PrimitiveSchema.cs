@@ -43,5 +43,22 @@ namespace Avro
                 throw new NotSupportedException("Type \"" + type + "\" is not a primitive.");
             }
         }
+
+        //internal override void writeJson(Newtonsoft.Json.JsonTextWriter writer)
+        //{
+        //    writer.WriteValue(this.Type);
+        //}
+
+        public static Schema Create(string json)
+        {
+            if (!IsPrimitive(json))
+                throw new NotSupportedException(json + " is not supported as a primitive schema.");
+            return new PrimitiveSchema(json.Trim('\"'));
+        }
+
+        public static bool IsPrimitive(string json)
+        {
+            return PrimitiveKeyLookup.ContainsKey(json.Trim('\"'));
+        }
     }
 }

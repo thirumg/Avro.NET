@@ -14,7 +14,7 @@ namespace Avro
         public BinaryDecoder(Stream s)
         {
             if (null == s) throw new ArgumentNullException("s", "s cannot be null.");
-            this.Stream = new BufferedStream(s);
+            this.Stream = s;
         }
 
 
@@ -50,7 +50,7 @@ namespace Avro
         /// <returns></returns>
         public bool ReadBool()
         {
-            return ord(read(1)) == 1;
+            return read() == 1;
         }
 
         private byte ord(byte[] p)

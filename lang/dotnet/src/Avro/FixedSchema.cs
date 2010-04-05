@@ -4,12 +4,12 @@ using System.Text;
 
 namespace Avro
 {
-    class FixedSchema:NamedSchema
+    public class FixedSchema:NamedSchema
     {
         public int Size { get; set; }
 
         public FixedSchema(string name, string snamespace, int size)
-            : base(name, snamespace, null)
+            : base("fixed", name, snamespace, null)
         {
             if (size <= 0) throw new ArgumentOutOfRangeException("size", "size must be greater than zero.");
             
@@ -20,6 +20,14 @@ namespace Avro
             : this(name, snamespace, size)
         {
 
+        }
+
+        protected override void WriteProperties(Newtonsoft.Json.JsonTextWriter writer)
+        {
+            base.WriteProperties(writer);
+
+            writer.WritePropertyName("size");
+            writer.WriteValue(this.Size);
         }
     }
 }

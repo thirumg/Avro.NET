@@ -18,7 +18,7 @@ namespace Avro
         public BinaryEncoder(Stream s)
         {
             if (null == s) throw new ArgumentNullException("s", "s cannot be null.");
-            this.Stream = new BufferedStream(s);
+            this.Stream = s;
         }
 
         private void write(params byte[] bytes)
@@ -132,13 +132,9 @@ namespace Avro
             write_bytes(buffer);
         }
 
-        [System.Runtime.InteropServices.StructLayout(System.Runtime.InteropServices.LayoutKind.Explicit)]
-        public class BitMem
+        public void flush()
         {
-            [System.Runtime.InteropServices.FieldOffset(0)]
-            public float f;
-            [System.Runtime.InteropServices.FieldOffset(0)]
-            public int i;
+            this.Stream.Flush();
         }
 
         public static int floatToRawIntBits(float f)

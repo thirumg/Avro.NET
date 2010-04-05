@@ -57,11 +57,34 @@ namespace Avro
         public const string BYTES = "bytes";
         private static readonly Logger log = new Logger();
         public string Type { get; private set; }
-
+        private IDictionary<string, string> Props;
         public Schema(string type)
         {
+            if (string.IsNullOrEmpty(type)) throw new ArgumentNullException("type", "type cannot be null.");
             this.Type = type;
+            this.Props = new Dictionary<string, string>();
         }
+
+        static Schema()
+        {
+            Dictionary<string, string> reservedprops=new Dictionary<string,string>(StringComparer.Ordinal);
+            
+              reservedprops.Add("type", null);
+              reservedprops.Add("name", null);
+              reservedprops.Add("namespace", null);
+              reservedprops.Add("fields", null);     // Record
+              reservedprops.Add("items", null);      // Array
+              reservedprops.Add("size", null);       // Fixed
+              reservedprops.Add("symbols", null);    // Enum
+              reservedprops.Add("values", null);     // Map
+
+            RESERVED_PROPS = reservedprops;
+        }
+
+        private static readonly IDictionary<string, string> RESERVED_PROPS;
+
+
+
 
         internal static Schema Parse(JToken j, Names names)
         {
@@ -72,7 +95,6 @@ namespace Avro
             {
                 string value = j.Value<string>();
 
-                
                 if (PrimitiveSchema.PrimitiveKeyLookup.ContainsKey(value))
                 {
                     return new PrimitiveSchema(value);
@@ -103,7 +125,7 @@ namespace Avro
             {
 
                 string type = JsonHelper.getRequiredString(j, "type");
-                if (log.IsDebugEnabled) log.DebugFormat("Parse(JObject) - type = \"{0}\"", type);
+                if (log.IsDebugEnabled) log.DebugFormat("Parse(JObject) - schema = \"{0}\"", type);
                 //string type = SchemaType.Null;
 
                 //if (!EnumHelper<SchemaType>.TryParse(stype, out type))
@@ -111,12 +133,14 @@ namespace Avro
                 //    throw new SchemaParseException(string.Format("Undefined type: \"{0}\"", stype));
                 //}
 
+                Schema schema = null;
+
                 if (Util.checkIsValue(type, PrimitiveSchema.SupportedTypes))
                 {
                     if (log.IsDebugEnabled) log.DebugFormat("\"{0}\" is primitive to returning PrimitiveSchema", type);
-                    return new PrimitiveSchema(type);
+                    schema = new PrimitiveSchema(type);
                 }
-                if (Util.checkIsValue(type, NamedSchema.SupportedTypes))
+                else if (Util.checkIsValue(type, NamedSchema.SupportedTypes))
                 {
                     if (log.IsDebugEnabled) log.DebugFormat("\"{0}\" is named.", type);
                     string sname = JsonHelper.getRequiredString(j, "name");
@@ -133,7 +157,8 @@ namespace Avro
                             {
                                 throw new SchemaParseException("Could not parse \"" + ssize + "\" to int32.");
                             }
-                            return new FixedSchema(name, snamespace, size);
+                            schema = new FixedSchema(name, snamespace, size);
+                            break;
                         case "enum":
                             JArray jsymbols = j["symbols"] as JArray;
                             List<string> symbols = new List<string>();
@@ -141,33 +166,50 @@ namespace Avro
                             {
                                 symbols.Add(jsymbol.Value<string>());
                             }
-                            return new EnumSchema(name, snamespace, symbols.ToArray(), names);
+                            schema = new EnumSchema(name, snamespace, symbols.ToArray(), names);
+                            break;
                         case "record":
                         case "error":
 
                             JToken jfields = j["fields"];
+
+                            if (null == jfields) throw new SchemaParseException("'fields' cannot be null.");
+
                             List<Field> fields = new List<Field>();
 
                             if (null != jfields)
-                            {
-                                foreach (JObject jfield in jfields)
+                                if (jfields.Type == JTokenType.Array)
                                 {
-                                    if (log.IsDebugEnabled) log.DebugFormat("{0}", jfield);
-                                    string fieldName = JsonHelper.getRequiredString(jfield, "name");
-                                    if (log.IsDebugEnabled) log.DebugFormat("fieldname = \"{0}\"", fieldName);
 
-                                    Field field = createField(jfield);
-                                    fields.Add(field);
+                                    foreach (JObject jfield in jfields)
+                                    {
+                                        if (log.IsDebugEnabled) log.DebugFormat("{0}", jfield);
+                                        string fieldName = JsonHelper.getRequiredString(jfield, "name");
+                                        if (log.IsDebugEnabled) log.DebugFormat("fieldname = \"{0}\"", fieldName);
+
+                                        Field field = createField(jfield);
+                                        fields.Add(field);
+                                    }
                                 }
-                            }
+                                else if (jfields.Type == JTokenType.Null)
+                                {
 
-                            return new RecordSchema(name, snamespace, fields, null);
+                                }
+                                else
+                                {
+                                    throw new SchemaParseException("'fields' has an unknown tokentype of '" + jfields.Type + "' supported types are Null or Array");
+                                }
+                            
+
+
+                            schema = new RecordSchema(name, snamespace, fields, null);
+                            break;
                     }
                 }
                 else if ("array" == type)
                 {
                     JToken items = j["items"];
-
+                    //if (null == items) throw new AvroException("'items' cannot be null.");
                     Schema arraySchema = Schema.Parse(items, names);
 
                     if (log.IsDebugEnabled) log.DebugFormat("items = {0}", items.GetType());
@@ -181,6 +223,48 @@ namespace Avro
                     return new MapSchema(valuesSchema);
                 }
 
+                
+
+                foreach (JToken p   in j.Children())
+                {
+                    if (p is JProperty)
+                    {
+
+                        JProperty prop = p as JProperty;
+                        if (RESERVED_PROPS.ContainsKey(prop.Name))
+                        {
+                            if (log.IsDebugEnabled) log.DebugFormat("Skipping reserved property \"{0}\"", prop);
+                            continue;
+                        }
+
+                        if (prop.Value is JArray)
+                        {
+                            schema[prop.Name] = prop.Value.ToString();
+                        }
+                        else
+                        {
+                            try
+                            {
+                                schema[prop.Name] = prop.Value.ToString().Trim('"');
+                            }
+                            catch
+                            {
+                                throw;
+                            }
+                        }
+                    }
+                    else
+                    {
+                        throw new NotSupportedException(p.ToString());
+                    }
+                    
+                }
+
+
+                return schema;
+
+
+
                 return new Schema(type);
             }
 
@@ -192,11 +276,13 @@ namespace Avro
 
         static Field createField(JToken jfield)
         {
+            if (log.IsDebugEnabled) log.DebugFormat("createField(JToken) - jfield = {0}", jfield);
             string name = JsonHelper.getRequiredString(jfield, "name");
             string doc = JsonHelper.getOptionalString(jfield, "doc");
 
             JToken jtype = jfield["type"];
-
+            if (null == jtype) 
+                throw new SchemaParseException("'type' was not found.");
             Schema type = Schema.Parse(jtype, new Names());
 
             return new Field(type, name, false);
@@ -246,6 +332,11 @@ namespace Avro
             
             Names names = new Names();
 
+            if (PrimitiveSchema.IsPrimitive(json))
+            {
+                return PrimitiveSchema.Create(json);
+            }
+
             try
             {
                 bool IsArray = json.StartsWith("[") && json.EndsWith("]");
@@ -265,7 +356,15 @@ namespace Avro
 
         }
 
-        protected virtual void writeStartObject(Newtonsoft.Json.JsonTextWriter writer)
+        public override string ToString()
+        {
+            System.IO.StringWriter sw=new System.IO.StringWriter();
+            Newtonsoft.Json.JsonTextWriter writer = new Newtonsoft.Json.JsonTextWriter(sw);
+            writeJson(writer);
+            return sw.ToString();
+        }
+
+        private void writeStartObject(Newtonsoft.Json.JsonTextWriter writer)
         {
             writer.WriteStartObject();
 
@@ -273,22 +372,54 @@ namespace Avro
             writer.WriteValue(this.Type);
         }
 
+        protected virtual void WriteProperties(Newtonsoft.Json.JsonTextWriter writer)
+        {
+
+        }
+
         internal virtual void writeJson(Newtonsoft.Json.JsonTextWriter writer)
         {
             writeStartObject(writer);
 
+            WriteProperties(writer);
+
+            foreach (KeyValuePair<string, string> kp in this.Props)
+            {
+                if (log.IsDebugEnabled) log.DebugFormat("Processing \"{0}\"", kp.Key);
+                if (RESERVED_PROPS.ContainsKey(kp.Key))
+                    continue;
+
+                writer.WritePropertyName(kp.Key);
+                writer.WriteValue(kp.Value);
+            }
 
             writer.WriteEndObject();
         }
 
-        public object GetProp(string p)
+        public string this[string key]
         {
-            throw new NotImplementedException();
+            get
+            {
+                string v = null;
+                if (this.Props.TryGetValue(key, out v))
+                    return v;
+                return null;
+            }
+            set
+            {
+                if (this.Props.ContainsKey(key))
+                    this.Props[key] = value;
+                else
+                    this.Props.Add(key, value);
+            }
+
+
         }
 
-        public void AddProp(string p, string p_2)
+        public override bool Equals(object obj)
         {
-            throw new NotImplementedException();
+            return string.Equals(this.ToString(), obj.ToString());
+
         }
     }
 }

@@ -4,17 +4,17 @@ using System.Text;
 
 namespace Avro
 {
-    enum SortOrder
+    public enum SortOrder
     {
         Ascending,
         Descending,
         Ignore
     }
 
-    class Field
+    public class Field
     {
         public string Name { get; private set; }
-        public string Namespace { get; set; }
+        
         public string Doc { get; set; }
         public object Default { get; private set; }
         public bool HasDefault { get; private set; }
@@ -22,19 +22,18 @@ namespace Avro
         public Schema Type { get; set; }
 
 
-        public Field(Schema type, string name, bool hasDefault)
-            : this(type, name, hasDefault, null, SortOrder.Ignore, null)
+        public Field(Schema schema, string name, bool hasDefault)
+            : this(schema, name, hasDefault, null, SortOrder.Ignore, null)
         {
 
         }
 
-        public Field(Schema type, string name, bool hasDefault, object oDefault, SortOrder sortorder, Names names)
+        public Field(Schema schema, string name, bool hasDefault, object oDefault, SortOrder sortorder, Names names)
         {
             if (string.IsNullOrEmpty(name)) throw new ArgumentNullException("name", "name cannot be null.");
+            if (null == schema) throw new ArgumentNullException("schema", "schema cannot be null.");
 
-            if (null == type) throw new ArgumentNullException("type", "type cannot be null.");
-
-            this.Type = type;
+            this.Type = schema;
             this.Name = name;
         }
 
@@ -42,7 +41,6 @@ namespace Avro
         {
             writer.WriteStartObject();
             JsonHelper.writeIfNotNullOrEmpty(writer, "name", this.Name);
-            JsonHelper.writeIfNotNullOrEmpty(writer, "namespace", this.Namespace);
             JsonHelper.writeIfNotNullOrEmpty(writer, "doc", this.Doc);
 
             if (null != this.Type)
@@ -50,10 +48,6 @@ namespace Avro
                 writer.WritePropertyName("type");
                 this.Type.writeJson(writer);
             }
-
-
-            
-
 
             writer.WriteEndObject();
         }

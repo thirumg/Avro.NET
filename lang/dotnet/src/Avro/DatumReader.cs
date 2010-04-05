@@ -29,11 +29,11 @@ namespace Avro
         }
 
 
-        static bool check_props(Schema schema_one, Schema schema_two, params string[] prop_list)
+        static bool CheckProps(Schema schema_one, Schema schema_two, params string[] props)
         {
-            return check_props(schema_one, schema_two, prop_list);
+            return CheckProps(schema_one, schema_two, props);
         }
-        static bool check_props(Schema schema_one, Schema schema_two, IEnumerable<string> prop_list)
+        static bool CheckProps(Schema schema_one, Schema schema_two, IEnumerable<string> props)
         {
             throw new NotImplementedException();
             //foreach (string prop in prop_list)
@@ -43,7 +43,7 @@ namespace Avro
             //}
             //return true;
         }
-        static bool match_schemas(Schema writers_schema, Schema readers_schema)
+        static bool matchSchemas(Schema writers_schema, Schema readers_schema)
         {
             string w_type = writers_schema.Type, r_type = readers_schema.Type;
 
@@ -51,21 +51,21 @@ namespace Avro
                 return true;
             else if (PrimitiveSchema.PrimitiveKeyLookup.ContainsKey(w_type) && PrimitiveSchema.PrimitiveKeyLookup.ContainsKey(r_type) && w_type == r_type)
                 return true;
-            else if (w_type == "record" && r_type == "record" && DatumReader.check_props(writers_schema, readers_schema, "fullname"))
+            else if (w_type == "record" && r_type == "record" && DatumReader.CheckProps(writers_schema, readers_schema, "fullname"))
                 return true;
-            else if (w_type == "error" && r_type == "error" && DatumReader.check_props(writers_schema, readers_schema, "fullname"))
+            else if (w_type == "error" && r_type == "error" && DatumReader.CheckProps(writers_schema, readers_schema, "fullname"))
                 return true;
             else if (w_type == "request" && r_type == "request")
                 return true;
-            else if (w_type == "fixed" && r_type == "fixed" && DatumReader.check_props(writers_schema, readers_schema, "fullname", "size"))
+            else if (w_type == "fixed" && r_type == "fixed" && DatumReader.CheckProps(writers_schema, readers_schema, "fullname", "size"))
                 return true;
-            else if (w_type == "enum" && r_type == "enum" && DatumReader.check_props(writers_schema, readers_schema, "fullname"))
+            else if (w_type == "enum" && r_type == "enum" && DatumReader.CheckProps(writers_schema, readers_schema, "fullname"))
                 return true;
-            //else if (w_type == "map" && r_type == "map" && DatumReader.check_props(writers_schema.values, readers_schema.values, "type"))
+            //else if (w_type == "map" && r_type == "map" && DatumReader.CheckProps(writers_schema.values, readers_schema.values, "type"))
             //    return true;
             //else if (w_type == "array" && r_type == "array" && DatumReader.check_props(writers_schema.items, readers_schema.items, "type"))
             //    return true;
-            if (w_type == "int" && Util.checkIsValue(r_type, "long", "float", "double"))
+            else if (w_type == "int" && Util.checkIsValue(r_type, "long", "float", "double"))
                 return true;
             else if (w_type == "long" && Util.checkIsValue(r_type, "float", "double"))
                 return true;
@@ -78,27 +78,27 @@ namespace Avro
             return false;
         }
 
-        public object read(BinaryDecoder decoder)
+        public object Read(BinaryDecoder decoder)
         {
             if (null == this.ReaderSchema)
                 this.ReaderSchema = this.WriterSchema;
 
-            return read_data(this.WriterSchema, this.ReaderSchema, decoder);
+            return ReadData(this.WriterSchema, this.ReaderSchema, decoder);
 
         }
 
-        private object read_data(Schema writers_schema, Schema readers_schema, BinaryDecoder decoder)
+        private object ReadData(Schema writers_schema, Schema readers_schema, BinaryDecoder decoder)
         {
-            if (!match_schemas(writers_schema, readers_schema))
+            if (!matchSchemas(writers_schema, readers_schema))
                 throw new SchemaResolutionException("Schemas do not match.", writers_schema, readers_schema);
 
             if (writers_schema.Type != "union" && readers_schema.Type == "union")
             {
                 foreach (Schema s in ((UnionSchema)readers_schema).Schemas)
                 {
-                    if (DatumReader.match_schemas(writers_schema, s))
+                    if (DatumReader.matchSchemas(writers_schema, s))
                     {
-                        return read_data(writers_schema, s, decoder);
+                        return ReadData(writers_schema, s, decoder);
                     }
                 }
 
@@ -122,22 +122,22 @@ namespace Avro
             else if (writers_schema.Type == "bytes")
                 return decoder.ReadBytes();
             else if (writers_schema.Type == "fixed")
-                return read_fixed(writers_schema, readers_schema, decoder);
+                return ReadFixed(writers_schema, readers_schema, decoder);
             else if (writers_schema.Type == "enum")
-                return read_enum(writers_schema, readers_schema, decoder);
+                return ReadEnum(writers_schema, readers_schema, decoder);
             else if (writers_schema.Type == "array")
-                return read_array(writers_schema, readers_schema, decoder);
+                return ReadArray(writers_schema, readers_schema, decoder);
             else if (writers_schema.Type == "map")
-                return read_map(writers_schema, readers_schema, decoder);
+                return ReadMap(writers_schema, readers_schema, decoder);
             else if (writers_schema.Type == "union")
-                return read_union(writers_schema, readers_schema, decoder);
+                return ReadUnion(writers_schema, readers_schema, decoder);
             else if (Util.checkIsValue(writers_schema.Type, "record", "error", "request"))
-                return read_record(writers_schema, readers_schema, decoder);
+                return ReadRecord(writers_schema, readers_schema, decoder);
             else
-                throw new AvroException("Cannot read unknown schema type) " + writers_schema.Type);
+                throw new AvroException("Cannot Read unknown schema schema) " + writers_schema.Type);
         }
 
-        public void skip_data(Schema writers_schema, BinaryDecoder decoder)
+        public void SkipData(Schema writers_schema, BinaryDecoder decoder)
         {
             if (writers_schema.Type == "null")
                 decoder.SkipNull();
@@ -156,35 +156,35 @@ namespace Avro
             else if (writers_schema.Type == "bytes")
                 decoder.ReadBytes();
             else if (writers_schema.Type == "fixed")
-                skip_fixed(writers_schema as FixedSchema, decoder);
+                SkipFixed(writers_schema as FixedSchema, decoder);
             else if (writers_schema.Type == "enum")
-                skip_enum(writers_schema, decoder);
+                SkipEnum(writers_schema, decoder);
             else if (writers_schema.Type == "array")
-                skip_array(writers_schema as ArraySchema, decoder);
+                SkipArray(writers_schema as ArraySchema, decoder);
             else if (writers_schema.Type == "map")
-                skip_map(writers_schema as MapSchema, decoder);
+                SkipMap(writers_schema as MapSchema, decoder);
             else if (writers_schema.Type == "union")
-                skip_union(writers_schema as UnionSchema, decoder);
+                SkipUnion(writers_schema as UnionSchema, decoder);
             else if (Util.checkIsValue(writers_schema.Type, "record", "error", "request"))
-                skip_record(writers_schema as RecordSchema, decoder);
+                SkipRecord(writers_schema as RecordSchema, decoder);
             else
-                throw new AvroException("Unknown schema type: %s" + writers_schema.Type);
+                throw new AvroException("Unknown schema schema: %s" + writers_schema.Type);
 
         }
 
-        private void skip_record(RecordSchema writers_schema, BinaryDecoder decoder)
+        private void SkipRecord(RecordSchema writers_schema, BinaryDecoder decoder)
         {
             foreach (Field field in writers_schema.Fields)
-                skip_data(field.Type, decoder);
+                SkipData(field.Type, decoder);
         }
 
-        private void skip_union(UnionSchema writers_schema, BinaryDecoder decoder)
+        private void SkipUnion(UnionSchema writers_schema, BinaryDecoder decoder)
         {
             int index_of_schema = (int)decoder.ReadLong();
-            skip_data(writers_schema.Schemas[index_of_schema], decoder);
+            SkipData(writers_schema.Schemas[index_of_schema], decoder);
         }
 
-        private void skip_map(MapSchema writers_schema, BinaryDecoder decoder)
+        private void SkipMap(MapSchema writers_schema, BinaryDecoder decoder)
         {
             long block_count = decoder.ReadLong();
             while (block_count != 0)
@@ -199,7 +199,7 @@ namespace Avro
                     for (int i = 0; i < block_count; i++)
                     {
                         decoder.SkipUTF8();
-                        skip_data(writers_schema.Values, decoder);
+                        SkipData(writers_schema.Values, decoder);
                         block_count = decoder.ReadLong();
                     }
                 }
@@ -207,7 +207,7 @@ namespace Avro
         }
 
 
-        private void skip_array(ArraySchema writers_schema, BinaryDecoder decoder)
+        private void SkipArray(ArraySchema writers_schema, BinaryDecoder decoder)
         {
             long block_count = decoder.ReadLong();
             while (block_count != 0)
@@ -222,19 +222,19 @@ namespace Avro
                     for (int i = 0; i < block_count; i++)
                     {
                         decoder.SkipUTF8();
-                        skip_data(writers_schema.Items, decoder);
+                        SkipData(writers_schema.Items, decoder);
                         block_count = decoder.ReadLong();
                     }
                 }
             }
         }
 
-        private void skip_enum(Schema writers_schema, BinaryDecoder decoder)
+        private void SkipEnum(Schema writers_schema, BinaryDecoder decoder)
         {
             decoder.SkipInt();
         }
 
-        private void skip_fixed(FixedSchema writers_schema, BinaryDecoder decoder)
+        private void SkipFixed(FixedSchema writers_schema, BinaryDecoder decoder)
         {
             decoder.skip(writers_schema.Size);
         }
@@ -262,32 +262,32 @@ namespace Avro
         /// <param name="readers_schema"></param>
         /// <param name="decoder"></param>
         /// <returns></returns>
-        private object read_record(Schema writers_schema, Schema readers_schema, BinaryDecoder decoder)
+        private object ReadRecord(Schema writers_schema, Schema readers_schema, BinaryDecoder decoder)
         {
             throw new NotImplementedException();
         }
 
-        private object read_union(Schema writers_schema, Schema readers_schema, BinaryDecoder decoder)
+        private object ReadUnion(Schema writers_schema, Schema readers_schema, BinaryDecoder decoder)
         {
             throw new NotImplementedException();
         }
 
-        private object read_map(Schema writers_schema, Schema readers_schema, BinaryDecoder decoder)
+        private object ReadMap(Schema writers_schema, Schema readers_schema, BinaryDecoder decoder)
         {
             throw new NotImplementedException();
         }
 
-        private object read_array(Schema writers_schema, Schema readers_schema, BinaryDecoder decoder)
+        private object ReadArray(Schema writers_schema, Schema readers_schema, BinaryDecoder decoder)
         {
             throw new NotImplementedException();
         }
 
-        private object read_enum(Schema writers_schema, Schema readers_schema, BinaryDecoder decoder)
+        private object ReadEnum(Schema writers_schema, Schema readers_schema, BinaryDecoder decoder)
         {
             throw new NotImplementedException();
         }
 
-        private object read_fixed(Schema writers_schema, Schema readers_schema, BinaryDecoder decoder)
+        private object ReadFixed(Schema writers_schema, Schema readers_schema, BinaryDecoder decoder)
         {
             throw new NotImplementedException();
         }

@@ -4,7 +4,7 @@ using System.Text;
 
 namespace Avro
 {
-    class Names:Dictionary<string, Name>
+    public class Names:Dictionary<string, Name>
     {
         public Names()
             : base(StringComparer.Ordinal)

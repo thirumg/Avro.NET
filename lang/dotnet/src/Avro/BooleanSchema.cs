@@ -4,7 +4,7 @@ using System.Text;
 
 namespace Avro
 {
-    public class BooleanSchema:Schema
+    public class BooleanSchema:PrimitiveSchema
     {
         public BooleanSchema()
             : base(Schema.BOOLEAN)
