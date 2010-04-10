@@ -6,6 +6,8 @@ namespace Avro
 {
     public class Name:IEquatable<Name>
     {
+        private static readonly Logger log = new Logger();
+
         public String name{ get;private set;}
         public String space { get; private set; }
         public String full { get; private set; }
@@ -28,8 +30,8 @@ namespace Avro
             {
                 string[] parts = name.Split('.');
 
-                this.space = string.Join(".", parts, 0, parts.Length - 2);
-                this.name = parts[0];
+                this.space = string.Join(".", parts, 0, parts.Length - 1);
+                this.name = parts[parts.Length - 1];
                 
                 // qualified name
                 //this.space = name.Substring(0, lastDot);  // get space from name
@@ -37,13 +39,7 @@ namespace Avro
             }
             this.full = string.IsNullOrEmpty(this.space) ? this.name : this.space + "." + this.name;
         }
-        public override bool Equals(Object o)
-        {
-            if (o == this) return true;
-            if (!(o is Name)) return false;
-            Name that = (Name)o;
-            return full == null ? that.full == null : full.Equals(that.full);
-        }
+
         public override int GetHashCode()
         {
             return string.IsNullOrEmpty(full)? 0 : full.GetHashCode();
@@ -66,25 +62,11 @@ namespace Avro
     
         public static Name make_fullname(string name, string snamespace)
         {
-            return new Name(name, snamespace);
+            if (log.IsDebugEnabled) log.DebugFormat("make_fullname(string, string) - name=\"{0}\", snamespace=\"{1}\"", name, snamespace);
+            Name n = new Name(name, snamespace);
+            if (log.IsDebugEnabled) log.DebugFormat("make_fullname(string, string) - n= \"{0}\"", n);
 
-
-            throw new NotImplementedException();
-            //if (string.IsNullOrEmpty(name)) throw new ArgumentNullException("name", "name cannot be null.");
-
-            //if (!name.Contains(".") && !string.IsNullOrEmpty(snamespace))
-            //{
-            //    return string.Concat(snamespace, ".", name);
-            //}
-            //else
-            //    return name;
-        }
-
-
-
-        internal static string make_fullname(Name name, string snamespace)
-        {
-            throw new NotImplementedException();
+            return n;
         }
 
         internal void WriteJson(Newtonsoft.Json.JsonTextWriter writer)
@@ -93,14 +75,21 @@ namespace Avro
             JsonHelper.writeIfNotNullOrEmpty(writer, "namespace", this.space);
         }
 
-        
-
-        public bool Equals(Name other)
+        public override bool Equals(Object o)
         {
-            if (null == other)
+            if (o == this) return true;
+            if (!(o is Name)) return false;
+            Name that = (Name)o;
+            return Equals(that);
+            
+        }
+
+        public bool Equals(Name that)
+        {
+            if (null == that)
                 return false;
 
-            return this.full.Equals(other.full);
+            return full == null ? that.full == null : full.Equals(that.full);
         }
     }
 }

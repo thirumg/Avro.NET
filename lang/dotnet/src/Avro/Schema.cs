@@ -104,12 +104,7 @@ namespace Avro
                 if (names.TryGetValue(value, out schema))
                     return schema;
 
-
-                //return new NamedSchema(
-
-                //return null;
-                return new Schema(value);
-                //throw new SchemaParseException("\"" + value + "\" is not a primitive type");
+                throw new SchemaParseException("Undefined name: " + value);
             }
             else if (j is JArray)
             {
@@ -167,6 +162,7 @@ namespace Avro
                                 throw new SchemaParseException("Could not parse \"" + ssize + "\" to int32.");
                             }
                             schema = new FixedSchema(name, size);
+                            if (null != name && !names.Contains(schema)) names.Add(schema);
                             break;
                         case "enum":
                             JArray jsymbols = j["symbols"] as JArray;
@@ -176,16 +172,19 @@ namespace Avro
                                 symbols.Add(jsymbol.Value<string>());
                             }
                             schema = new EnumSchema(name, symbols, names);
+                            if (null != name && !names.Contains(schema)) names.Add(schema);
                             break;
                         case "record":
                         case "error":
-
+                            
                             JToken jfields = j["fields"];
 
                             if (null == jfields) throw new SchemaParseException("'fields' cannot be null.");
 
-                            List<Field> fields = new List<Field>();
 
+
+                            RecordSchema record = new RecordSchema(name, null, names);
+                            if (null != name && !names.Contains(schema)) names.Add(record);
                             if (null != jfields)
                                 if (jfields.Type == JTokenType.Array)
                                 {
@@ -197,7 +196,7 @@ namespace Avro
                                         if (log.IsDebugEnabled) log.DebugFormat("fieldname = \"{0}\"", fieldName);
 
                                         Field field = createField(jfield, names);
-                                        fields.Add(field);
+                                        record.AddField(field);
                                     }
                                 }
                                 else if (jfields.Type == JTokenType.Null)
@@ -208,14 +207,12 @@ namespace Avro
                                 {
                                     throw new SchemaParseException("'fields' has an unknown tokentype of '" + jfields.Type + "' supported types are Null or Array");
                                 }
+                            schema = record;
                             
-
-
-                            schema = new RecordSchema(name, fields, null);
                             break;
                     }
 
-                    if (null != name&&!names.Contains(schema)) names.Add(schema);
+                    
                 }
                 else if ("array" == type)
                 {
@@ -246,7 +243,6 @@ namespace Avro
                 {
                     if (p is JProperty)
                     {
-
                         JProperty prop = p as JProperty;
                         if (RESERVED_PROPS.ContainsKey(prop.Name))
                         {
@@ -279,10 +275,6 @@ namespace Avro
 
 
                 return schema;
-
-
-
-                return new Schema(type);
             }
 
 

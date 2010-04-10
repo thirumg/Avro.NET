@@ -313,8 +313,11 @@ namespace Avro.Test
             RecordSchema xs = Schema.Parse(x) as RecordSchema;
             Assert.IsNotNull(xs);
             RecordSchema ys = xs["f"].Type as RecordSchema;
+            Assert.IsNotNull(ys);
             NamedSchema xsg = xs["g"].Type as NamedSchema;
+            Assert.IsNotNull(xsg);
             NamedSchema ysf = ys["f"].Type as NamedSchema;
+            Assert.IsNotNull(ysf);
 
             Assert.AreEqual("p.Z", xsg.FullName);
             Assert.AreEqual("q.Z", ysf.FullName);

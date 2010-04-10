@@ -9,20 +9,31 @@ namespace Avro
         public IList<Field> Fields { get; set; }
         private IDictionary<string, Field> _fieldLookup;
 
-        public RecordSchema(Name name, IEnumerable<Field> fields, Names names):base("record", name, names)
+        public RecordSchema(Name name, IEnumerable<Field> fields, Names names)
+            : base("record", name, names)
         {
-            if (null == fields) throw new ArgumentNullException("fields", "fields cannot be null.");
-            this.Fields = new List<Field>(fields);
+            //if (null == fields) throw new ArgumentNullException("fields", "fields cannot be null.");
+            this.Fields = new List<Field>();
 
             Dictionary<string, Field> fieldLookup = new Dictionary<string, Field>(StringComparer.Ordinal);
 
-            foreach (Field field in fields)
-            {
-                fieldLookup.Add(field.Name, field);
-            }
+            if (null != fields)
+                foreach (Field field in fields)
+                {
+                    AddField(field);
+                }
 
             _fieldLookup = fieldLookup;
         }
+
+        public void AddField(Field field)
+        {
+            this.Fields.Add(field);
+            _fieldLookup.Add(field.Name, field);
+        }
+
+        
+
 
         public new Field this[string name]
         {
