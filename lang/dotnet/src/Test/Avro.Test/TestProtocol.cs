@@ -15,7 +15,7 @@ namespace Avro.Test
             ExampleProtocol[] EXAMPLES = new ExampleProtocol[]{
   new ExampleProtocol(@"{
   ""namespace"": ""com.acme"",
-  ""protocol"": ""HelloWorld"",
+  ""schema"": ""HelloWorld"",
 
   ""types"": [
     {""name"": ""Greeting"", ""type"": ""record"", ""fields"": [
@@ -34,7 +34,7 @@ namespace Avro.Test
 }", true),
   new ExampleProtocol(@" 
 {""namespace"": ""org.apache.avro.test"",
- ""protocol"": ""Simple"",
+ ""schema"": ""Simple"",
 
  ""types"": [
      {""name"": ""Kind"", ""type"": ""enum"", ""symbols"": [""FOO"",""BAR"",""BAZ""]},
@@ -89,7 +89,7 @@ namespace Avro.Test
     """, true),
 
        new ExampleProtocol(@"{""namespace"": ""org.apache.avro.test.namespace"",
- ""protocol"": ""TestNamespace"",
+ ""schema"": ""TestNamespace"",
 
  ""types"": [
      {""name"": ""org.apache.avro.test.util.MD5"", ""type"": ""fixed"", ""size"": 16},
@@ -118,7 +118,7 @@ namespace Avro.Test
 }", true), 
 
   new ExampleProtocol(@"{""namespace"": ""org.apache.avro.test"",
- ""protocol"": ""BulkData"",
+ ""schema"": ""BulkData"",
 
  ""types"": [],
 

@@ -25,7 +25,7 @@ namespace Avro
         public void write_data(Schema writers_schema, object datum, BinaryEncoder encoder)
         {
             if (!validate(writers_schema, datum))
-                throw new AvroTypeException("Type " + writers_schema + "value = " + datum);
+                throw new AvroTypeException("Schema " + writers_schema + "value = " + datum);
               
             //# function dispatch to write datum
             if (writers_schema.Type == "null")

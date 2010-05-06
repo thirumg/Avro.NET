@@ -24,7 +24,7 @@ namespace Avro
         public object Default { get; private set; }
         public bool HasDefault { get; private set; }
         public SortOrder? Order { get; private set; }
-        public Schema Type { get; set; }
+        public Schema Schema { get; set; }
 
 
         public Field(Schema schema, string name, bool hasDefault)
@@ -38,7 +38,7 @@ namespace Avro
             if (string.IsNullOrEmpty(name)) throw new ArgumentNullException("name", "name cannot be null.");
             if (null == type) throw new ArgumentNullException("type", "type cannot be null.");
 
-            this.Type = type;
+            this.Schema = type;
             this.Name = name;
         }
 
@@ -48,10 +48,10 @@ namespace Avro
             JsonHelper.writeIfNotNullOrEmpty(writer, "name", this.Name);
             JsonHelper.writeIfNotNullOrEmpty(writer, "doc", this.Documentation);
 
-            if (null != this.Type)
+            if (null != this.Schema)
             {
                 writer.WritePropertyName("type");
-                this.Type.writeJson(writer);
+                this.Schema.writeJson(writer);
             }
 
             writer.WriteEndObject();

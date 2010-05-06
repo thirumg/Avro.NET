@@ -20,6 +20,11 @@ namespace Avro.CodeGen
             primitiveLookup.Add(Schema.STRING, new CodeTypeReference(typeof(string)));
             primitiveLookup.Add(Schema.INT, new CodeTypeReference(typeof(int)));
             primitiveLookup.Add(Schema.LONG, new CodeTypeReference(typeof(long)));
+            primitiveLookup.Add(Schema.BOOLEAN, new CodeTypeReference(typeof(bool)));
+            primitiveLookup.Add(Schema.DOUBLE, new CodeTypeReference(typeof(double)));
+            primitiveLookup.Add(Schema.FLOAT, new CodeTypeReference(typeof(float)));
+
+
             primitiveLookup.Add(Schema.NULL, null);
 
             _PrimitiveLookup = primitiveLookup;
@@ -44,7 +49,8 @@ namespace Avro.CodeGen
 
         private CodeNamespace addNamespace(string name)
         {
-            if (string.IsNullOrEmpty(name)) throw new ArgumentNullException("name", "name cannot be null.");
+            if (string.IsNullOrEmpty(name)) 
+                throw new ArgumentNullException("name", "name cannot be null.");
             if (log.IsDebugEnabled) log.DebugFormat("addNamespace(string) - name = \"{0}\"", name);
             CodeNamespace ns = null;
 
@@ -71,8 +77,27 @@ namespace Avro.CodeGen
 
         private void processTypes()
         {
-            
+            foreach (Schema schema in this.Types)
+            {
+                CodeNamespace ns = null;
+
+                if (schema is NamedSchema)
+                {
+                    NamedSchema named = schema as NamedSchema;
+
+                    if (named.Name != null && !string.IsNullOrEmpty(named.Name.space))
+                    {
+                        ns = addNamespace(named.Name.space);
+                    }
+                }
+
+
+
+                processSchema(ns, schema);
+            }
         }
+
+
 
         private void processProtocols()
         {
@@ -88,27 +113,7 @@ namespace Avro.CodeGen
                         continue;
                     }
 
-                    if (Schema.ENUM == schema.Type)
-                    {
-                        processEnum(schema, ns);
-                    }
-                    else if (Schema.FIXED == schema.Type)
-                    {
-
-                    }
-                    else if (Schema.RECORD == schema.Type)
-                    {
-                        processRecord(schema, ns);
-                    }
-                    else if (Schema.ERROR == schema.Type)
-                    {
-                        CodeTypeDeclaration errorRecord = processRecord(schema, ns);
-
-                    }
-                    else
-                    {
-                        throw new NotSupportedException("Schema Type of \"" + schema.Type + "\" is not supported yet.");
-                    }
+                    processSchema(ns, schema);
                 }
 
 
@@ -118,29 +123,168 @@ namespace Avro.CodeGen
             }
         }
 
+        private void processSchema(CodeNamespace ns, Schema schema)
+        {
+            if (Schema.ENUM == schema.Type)
+            {
+                processEnum(schema, ns);
+            }
+            else if (Schema.FIXED == schema.Type)
+            {
+                processFixed(schema);
+            }
+            else if (Schema.RECORD == schema.Type)
+            {
+                processRecord(schema, ns);
+            }
+            else if (Schema.ERROR == schema.Type)
+            {
+                CodeTypeDeclaration errorRecord = processRecord(schema, ns);
+            }
+            else if (Schema.ARRAY == schema.Type)
+            {
+                processArray(schema);
+            }
+            else if (Schema.MAP == schema.Type)
+            {
+                procesMap(schema);
+            }
+            else if (Schema.UNION == schema.Type)
+            {
+                processUnion(schema);
+            }
+            else
+            {
+                throw new NotSupportedException("Schema Schema of \"" + schema.Type + "\" is not supported yet.");
+            }
+        }
+
+        private void processFixed(Schema schema)
+        {
+            if (_SchemaToCodeTypeReferenceLookup.ContainsKey(schema))
+                return;
+            Schema fixedSchema = schema as FixedSchema;
+
+            _SchemaToCodeTypeReferenceLookup.Add(schema, new CodeTypeReference(typeof(byte[])));
+        }
+
+        private void processUnion(Schema schema)
+        {
+            if (_SchemaToCodeTypeReferenceLookup.ContainsKey(schema))
+                return;
+            UnionSchema unionSchema = schema as UnionSchema;
+
+            //TODO: This is wrong
+            _SchemaToCodeTypeReferenceLookup.Add(schema, new CodeTypeReference(typeof(string)));
+            //unionSchema.
+        }
+
+        private void procesMap(Schema schema)
+        {
+            if (_SchemaToCodeTypeReferenceLookup.ContainsKey(schema))
+                return;
+
+            MapSchema mapSchema = schema as MapSchema;
+
+            CodeTypeReference typeRef = new CodeTypeReference("System.Collections.Dictionary");
+            typeRef.TypeArguments.Add(new CodeTypeReference(typeof(string)));
+            typeRef.TypeArguments.Add(new CodeTypeReference(typeof(string)));
+
+            //CodeTypeReference valueType = getCodeTypeReference(mapSchema.Values);
+
+
+
+//            typeRef.TypeArguments.Add(valueType);
+
+            _SchemaToCodeTypeReferenceLookup.Add(schema, typeRef);
+        }
+
+        private void processArray(Schema schema)
+        {
+            if (_SchemaToCodeTypeReferenceLookup.ContainsKey(schema))
+                return;
+
+            ArraySchema arraySchema = schema as ArraySchema;
+
+
+
+
+            CodeTypeReference arrayItemRef = getCodeTypeReference(arraySchema.Items);
+
+            CodeTypeReference arrayRef = new CodeTypeReference(arrayItemRef, 1);
+
+            _SchemaToCodeTypeReferenceLookup.Add(schema, arrayRef);
+        }
+
         private CodeTypeDeclaration processRecord(Schema schema, CodeNamespace ns)
         {
             RecordSchema recordSchema = schema as RecordSchema;
 
             CodeNamespace recordNamespace = null;
 
-            if (string.IsNullOrEmpty(recordSchema.Name.space))
+            if (string.IsNullOrEmpty(recordSchema.Name.space) && null!=ns)
                 recordNamespace = ns;
             else
                 recordNamespace = addNamespace(recordSchema.Name.space);
 
             CodeTypeReference refRecord = new CodeTypeReference(recordSchema.Name.name);
 
+            _SchemaToCodeTypeReferenceLookup.Add(schema, refRecord);
+
             CodeTypeDeclaration recordDeclare = new CodeTypeDeclaration(refRecord.BaseType);
             recordDeclare.Attributes = MemberAttributes.Public;
             recordDeclare.IsClass = true;
             recordDeclare.IsPartial = true;
 
+            foreach (Field field in recordSchema.Fields)
+            {
+                if (Schema.NULL == field.Schema.Type)
+                {
+                    //TODO: Look into this. It just feels wrong. I don't understand the need for a null field, but can this be stubbed out so that it will at least generate a field with type of object?
+                    if (log.IsDebugEnabled) log.DebugFormat("Skipping field \"{0}\" because it is null", field.Name);
 
+                    continue;
+                }
+
+                CodeTypeReference fieldType = getCodeTypeReference(field.Schema);
+                if (null == fieldType)
+                {
+                    processSchema(ns, field.Schema);
+
+                    fieldType = getCodeTypeReference(field.Schema);
+
+                    if (null == fieldType)
+                    {
+                        throw new Exception("Field Schema \"" + field.Schema + "\" not found.");
+                    }
+                }
+
+                CodeCommentStatement propertyComment = string.IsNullOrEmpty(field.Documentation) ? null : createDocComment(field.Documentation);
+
+
+                string privFieldName = string.Concat("_", field.Name);
+                CodeFieldReferenceExpression fieldRef = new CodeFieldReferenceExpression(new CodeThisReferenceExpression(), privFieldName);
+                CodeMemberField codeField = new CodeMemberField(fieldType, fieldRef.FieldName);
+                codeField.Attributes = MemberAttributes.Private;
+                if (null != propertyComment)
+                    codeField.Comments.Add(propertyComment);
+
+                recordDeclare.Members.Add(codeField);
+
+                CodeMemberProperty property = new CodeMemberProperty();
+                property.Attributes = MemberAttributes.Public|MemberAttributes.Final;
+                property.Name = field.Name;
+                property.Type = fieldType;
+                property.GetStatements.Add(new CodeMethodReturnStatement(fieldRef));
+                property.SetStatements.Add(new CodeAssignStatement(fieldRef, new CodePropertySetValueReferenceExpression()));
+                if (null != propertyComment)
+                    property.Comments.Add(propertyComment);
+                recordDeclare.Members.Add(property);
+            }
 
             recordNamespace.Types.Add(recordDeclare);
 
-            _SchemaToCodeTypeReferenceLookup.Add(schema, refRecord);
+
 
             return recordDeclare;
         }
@@ -162,7 +306,19 @@ namespace Avro.CodeGen
             }
 
             _SchemaToCodeTypeReferenceLookup.Add(schema, refEnum);
-            ns.Types.Add(typeEnum);
+
+            CodeNamespace addtoNs = null;
+
+            if (null != enumschema.Name && !string.IsNullOrEmpty(enumschema.Name.space))
+            {
+                addtoNs = addNamespace(enumschema.Name.space);
+            }
+            else
+            {
+                addtoNs = ns;
+            }
+
+            addtoNs.Types.Add(typeEnum);
         }
 
         private void createProtocolClient(Protocol protocol, CodeNamespace ns, CodeTypeReference protocolInterface)
@@ -229,7 +385,8 @@ namespace Avro.CodeGen
 
             if (!_SchemaToCodeTypeReferenceLookup.TryGetValue(schema, out typeref))
             {
-                typeref = new CodeTypeReference(typeof(string));
+                //processSchema(null, schema);
+                //typeref = new CodeTypeReference(typeof(string));
             }
             return typeref;
         }

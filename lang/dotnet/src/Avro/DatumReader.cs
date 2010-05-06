@@ -176,7 +176,7 @@ namespace Avro
         private void SkipRecord(RecordSchema writers_schema, BinaryDecoder decoder)
         {
             foreach (Field field in writers_schema.Fields)
-                SkipData(field.Type, decoder);
+                SkipData(field.Schema, decoder);
         }
 
         private void SkipUnion(UnionSchema writers_schema, BinaryDecoder decoder)

@@ -183,9 +183,13 @@ namespace Avro
 
                             if (null == jfields) throw new SchemaParseException("'fields' cannot be null.");
 
+                            RecordSchema record = null;
 
+                            if (Schema.ERROR == type)
+                                record = new ErrorSchema(name, null, names);
+                            else if (Schema.RECORD == type)
+                                record = new RecordSchema(name, null, names);
 
-                            ErrorSchema record = new ErrorSchema(name, null, names);
                             if (null != name && !names.Contains(schema)) names.Add(record);
                             if (null != jfields)
                                 if (jfields.Type == JTokenType.Array)
@@ -236,7 +240,7 @@ namespace Avro
                 {
                     if (!names.TryGetValue(type, out schema))
                     {
-                        throw new AvroTypeException("Type '" + type + "' is not a known type");
+                        throw new AvroTypeException("Schema '" + type + "' is not a known type");
                     }
                 }
                 
@@ -395,21 +399,21 @@ namespace Avro
 
         internal virtual void writeJson(Newtonsoft.Json.JsonTextWriter writer)
         {
-            writeStartObject(writer);
+            //writeStartObject(writer);
 
-            WriteProperties(writer);
+            //WriteProperties(writer);
 
-            foreach (KeyValuePair<string, string> kp in this.Props)
-            {
-                if (log.IsDebugEnabled) log.DebugFormat("Processing \"{0}\"", kp.Key);
-                if (RESERVED_PROPS.ContainsKey(kp.Key))
-                    continue;
+            //foreach (KeyValuePair<string, string> kp in this.Props)
+            //{
+            //    if (log.IsDebugEnabled) log.DebugFormat("Processing \"{0}\"", kp.Key);
+            //    if (RESERVED_PROPS.ContainsKey(kp.Key))
+            //        continue;
 
-                writer.WritePropertyName(kp.Key);
-                writer.WriteValue(kp.Value);
-            }
+            //    writer.WritePropertyName(kp.Key);
+            //    writer.WriteValue(kp.Value);
+            //}
 
-            writer.WriteEndObject();
+            //writer.WriteEndObject();
         }
 
         public string this[string key]

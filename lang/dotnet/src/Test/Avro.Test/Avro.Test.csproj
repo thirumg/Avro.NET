@@ -56,8 +56,24 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <None Include="..\..\..\..\..\share\test\schemas\BulkData.avpr">
+      <Link>CodeGen\BulkData.avpr</Link>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Include="..\..\..\..\..\share\test\schemas\interop.avsc">
+      <Link>CodeGen\interop.avsc</Link>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Include="..\..\..\..\..\share\test\schemas\namespace.avpr">
+      <Link>CodeGen\namespace.avpr</Link>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
     <None Include="..\..\..\..\..\share\test\schemas\simple.avpr">
       <Link>CodeGen\simple.avpr</Link>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Include="..\..\..\..\..\share\test\schemas\WordCount.avsc">
+      <Link>CodeGen\WordCount.avsc</Link>
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
   </ItemGroup>

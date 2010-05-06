@@ -18,21 +18,75 @@ namespace Avro.Test.CodeGen
         /// Testcase is used to load simple.avpr
         /// </summary>
         [TestCase]
-        public void TestSimple_avpr()
+        public void Simple_avpr()
         {
-            string inputFile = "CodeGen/simple.avpr";
+            const string inputFile = "CodeGen/simple.avpr";
             string outputFile = Path.GetFullPath(inputFile);
             outputFile = Path.ChangeExtension(inputFile, ".cs");
             Protocol protocol = loadProtocolFromFile(inputFile);
 
+            AvroGen generator = new AvroGen();
+            generator.Protocols.Add(protocol);
+
+            CodeCompileUnit cu = generate(generator);
+
+            writeSource(outputFile, cu);
+           
+        }
+
+        [TestCase]
+        public void BulkData_avpr()
+        {
+            const string inputFile = "CodeGen/BulkData.avpr";
+            string outputFile = Path.GetFullPath(inputFile);
+            outputFile = Path.ChangeExtension(inputFile, ".cs");
+            Protocol protocol = loadProtocolFromFile(inputFile);
 
             AvroGen generator = new AvroGen();
             generator.Protocols.Add(protocol);
 
-            CodeCompileUnit cu = generator.Generate();
-            Assert.IsNotNull(cu);
-            Assert.IsTrue(cu.Namespaces.Count > 0, "Some namespaces should have been generated.");
+            CodeCompileUnit cu = generate(generator);
 
+            writeSource(outputFile, cu);
+        }
+
+        [TestCase]
+        public void namespace_avpr()
+        {
+            const string inputFile = "CodeGen/namespace.avpr";
+            string outputFile = Path.GetFullPath(inputFile);
+            outputFile = Path.ChangeExtension(inputFile, ".cs");
+            Protocol protocol = loadProtocolFromFile(inputFile);
+
+            AvroGen generator = new AvroGen();
+            generator.Protocols.Add(protocol);
+
+            CodeCompileUnit cu = generate(generator);
+
+            writeSource(outputFile, cu);
+        }
+
+        [TestCase]
+        public void interop_avsc()
+        {
+            const string inputFile = "CodeGen/interop.avsc";
+            string outputFile = Path.GetFullPath(inputFile);
+            outputFile = Path.ChangeExtension(inputFile, ".cs");
+            Schema schema = loadSchemaFromFile(inputFile);
+            
+            AvroGen generator = new AvroGen();
+            generator.Types.Add(schema);
+
+            CodeCompileUnit cu = generate(generator);
+
+            writeSource(outputFile, cu);
+        }
+
+
+
+
+        private static void writeSource(string outputFile, CodeCompileUnit cu)
+        {
             Microsoft.CSharp.CSharpCodeProvider csp = new Microsoft.CSharp.CSharpCodeProvider();
             CodeGeneratorOptions options = new CodeGeneratorOptions();
             options.BracingStyle = "C";
@@ -42,14 +96,29 @@ namespace Avro.Test.CodeGen
             {
                 csp.GenerateCodeFromCompileUnit(cu, writer, options);
             }
-           
+        }
+
+        private static CodeCompileUnit generate(AvroGen generator)
+        {
+            CodeCompileUnit cu = generator.Generate();
+            Assert.IsNotNull(cu);
+            Assert.IsTrue(cu.Namespaces.Count > 0, "Some namespaces should have been generated.");
+            return cu;
+        }
+
+        private static Schema loadSchemaFromFile(string inputFile)
+        {
+            string json = File.ReadAllText(inputFile, Encoding.UTF8);
+            Schema schema = Schema.Parse(json);
+            Assert.IsNotNull(schema, "Schema should not be null.");
+            return schema;
         }
 
         private static Protocol loadProtocolFromFile(string inputFile)
         {
             string json = File.ReadAllText(inputFile, Encoding.UTF8);
             Protocol protocol = Protocol.Parse(json);
-            Assert.IsNotNull(protocol);
+            Assert.IsNotNull(protocol, "Protocol should not be null.");
             return protocol;
         }
     }
