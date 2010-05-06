@@ -16,11 +16,10 @@ namespace Avro
             try
             {
                 jsonData = JObject.Parse(json);
-
             }
             catch (Exception ex)
             {
-                throw new ProtocolParseException("Error parsing JSON: " + json);
+                throw new ProtocolParseException("Error parsing JSON: " + json, ex);
             }
 
             return Parse(jsonData);
@@ -69,7 +68,7 @@ namespace Avro
             return new Protocol(protocol, snamespace, doc, types, messages);
         }
 
-        public Protocol(string name, string snamespace, string doc, IList<Schema> types, IList<Message> messages)
+        public Protocol(string name, string snamespace, string doc, IEnumerable<Schema> types, IEnumerable<Message> messages)
         {
             if (string.IsNullOrEmpty(name)) throw new ArgumentNullException("name", "name cannot be null.");
             if (null == types) throw new ArgumentNullException("types", "types cannot be null.");
@@ -78,8 +77,8 @@ namespace Avro
             this.Name = name;
             this.Namespace = snamespace;
             this.Doc = doc;
-            this.Types = types;
-            this.Messages = messages;
+            this.Types = new List<Schema>(types);
+            this.Messages = new List<Message>(messages);
         }
 
         
@@ -88,9 +87,6 @@ namespace Avro
         {
             using (StringWriter sw = new StringWriter())
             {
-
-                
-
                 using (Newtonsoft.Json.JsonTextWriter writer = new Newtonsoft.Json.JsonTextWriter(sw))
                 {
                     #if(DEBUG)
@@ -146,6 +142,12 @@ namespace Avro
             //TODO:This will perform like shit. FIx it.
 
             return string.Equals(a, b);
+        }
+
+        public override int GetHashCode()
+        {
+            //TODO: Actually do something here.
+            return base.GetHashCode();
         }
     }
 }

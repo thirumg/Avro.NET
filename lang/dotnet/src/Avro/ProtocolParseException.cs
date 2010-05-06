@@ -11,5 +11,12 @@ namespace Avro
         {
 
         }
+
+        public ProtocolParseException(string s, Exception inner)
+            : base(s, inner)
+        {
+
+        }
+
     }
 }

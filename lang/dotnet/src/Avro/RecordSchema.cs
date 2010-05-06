@@ -9,8 +9,13 @@ namespace Avro
         public IList<Field> Fields { get; set; }
         private IDictionary<string, Field> _fieldLookup;
 
-        public RecordSchema(Name name, IEnumerable<Field> fields, Names names)
-            : base("record", name, names)
+        public RecordSchema(Name name, IEnumerable<Field> fields, Names names):this(Schema.RECORD,name, fields, names)
+        {
+
+        }
+
+        public RecordSchema(string type, Name name, IEnumerable<Field> fields, Names names)
+            : base(type, name, names)
         {
             //if (null == fields) throw new ArgumentNullException("fields", "fields cannot be null.");
             this.Fields = new List<Field>();

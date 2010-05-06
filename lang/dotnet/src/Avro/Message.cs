@@ -7,13 +7,24 @@ namespace Avro
 {
     public class Message
     {
+        public class Parameter
+        {
+            public string Name { get; set; }
+            public Schema Schema { get; set; }
+
+            internal void writeJson(Newtonsoft.Json.JsonTextWriter writer)
+            {
+                throw new NotImplementedException();
+            }
+        }
+
         public string Name { get; set; }
         public string Doc { get; set; }
-        public IList<Schema> Request { get; set; }
+        public IList<Parameter> Request { get; set; }
         public Schema Response { get; set; }
         public UnionSchema Error { get; set; }
 
-        public Message(string name, string doc, IList<Schema> request, Schema response, UnionSchema error)
+        public Message(string name, string doc, IList<Parameter> request, Schema response, UnionSchema error)
         {
             if (string.IsNullOrEmpty(name)) throw new ArgumentNullException("name", "name cannot be null.");
             this.Request = request;
@@ -31,16 +42,18 @@ namespace Avro
             JToken jresponse = jmessage.Value["response"];
             JToken jerrors = jmessage.Value["errors"];
 
-            List<Schema> request = new List<Schema>();
+            List<Parameter> request = new List<Parameter>();
 
             foreach (JToken jtype in jrequest)
             {
-                Schema schema = Schema.ParseJson(jtype, names);
+                Parameter parameter = new Parameter();
+                parameter.Name = JsonHelper.getRequiredString(jtype, "name");
+                parameter.Schema = Schema.ParseJson(jtype, names);
 
-                if (null == schema)
+                if (null == parameter.Schema)
                     throw new SchemaParseException(jtype.ToString());
 
-                request.Add(schema);
+                request.Add(parameter);
             }
 
             Schema response = Schema.ParseJson(jresponse, names);
@@ -70,7 +83,7 @@ namespace Avro
 
 
 
-            throw new NotImplementedException();
+            //throw new NotImplementedException();
         }
 
         internal void writeJson(Newtonsoft.Json.JsonTextWriter writer)
@@ -84,10 +97,10 @@ namespace Avro
                 writer.WritePropertyName("request");
                 writer.WriteStartArray();
 
-                foreach (Schema schema in this.Request)
+                foreach (Parameter parameter in this.Request)
                 {
-                    System.Diagnostics.Debug.Assert(schema != null);
-                    schema.writeJson(writer);
+                    System.Diagnostics.Debug.Assert(parameter != null);
+                    parameter.writeJson(writer);
                 }
 
                 writer.WriteEndArray();

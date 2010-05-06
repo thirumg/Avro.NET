@@ -21,23 +21,23 @@ namespace Avro.Test
         public const string BASIC_ENUM_SCHEMA = "{\"type\":\"enum\", \"name\":\"Test\","
             + "\"symbols\": [\"A\", \"B\"]}";
 
-        public const string SCHEMA_WITH_DOC_TAGS = "{\n"
-      + "  \"type\": \"record\",\n"
-      + "  \"name\": \"outer_record\",\n"
-      + "  \"doc\": \"This is not a world record.\",\n"
-      + "  \"fields\": [\n"
+        public const string SCHEMA_WITH_DOC_TAGS = "{\name"
+      + "  \"type\": \"record\",\name"
+      + "  \"name\": \"outer_record\",\name"
+      + "  \"doc\": \"This is not a world record.\",\name"
+      + "  \"fields\": [\name"
       + "    { \"type\": { \"type\": \"fixed\", \"doc\": \"Very Inner Fixed\", "
-      + "                  \"name\": \"very_inner_fixed\", \"size\": 1 },\n"
-      + "      \"doc\": \"Inner Fixed\", \"name\": \"inner_fixed\" },\n"
-      + "    { \"type\": \"string\",\n"
-      + "      \"name\": \"inner_string\",\n"
-      + "      \"doc\": \"Inner String\" },\n"
-      + "    { \"type\": { \"type\": \"enum\", \"doc\": \"Very Inner Enum\", \n"
-      + "                  \"name\": \"very_inner_enum\", \n"
-      + "                  \"symbols\": [ \"A\", \"B\", \"C\" ] },\n"
-      + "      \"doc\": \"Inner Enum\", \"name\": \"inner_enum\" },\n"
-      + "    { \"type\": [\"string\", \"int\"], \"doc\": \"Inner Union\", \n"
-      + "      \"name\": \"inner_union\" }\n" + "  ]\n" + "}\n";
+      + "                  \"name\": \"very_inner_fixed\", \"size\": 1 },\name"
+      + "      \"doc\": \"Inner Fixed\", \"name\": \"inner_fixed\" },\name"
+      + "    { \"type\": \"string\",\name"
+      + "      \"name\": \"inner_string\",\name"
+      + "      \"doc\": \"Inner String\" },\name"
+      + "    { \"type\": { \"type\": \"enum\", \"doc\": \"Very Inner Enum\", \name"
+      + "                  \"name\": \"very_inner_enum\", \name"
+      + "                  \"symbols\": [ \"A\", \"B\", \"C\" ] },\name"
+      + "      \"doc\": \"Inner Enum\", \"name\": \"inner_enum\" },\name"
+      + "    { \"type\": [\"string\", \"int\"], \"doc\": \"Inner Union\", \name"
+      + "      \"name\": \"inner_union\" }\name" + "  ]\name" + "}\name";
 
 
         [Test]
@@ -319,8 +319,8 @@ namespace Avro.Test
             NamedSchema ysf = ys["f"].Type as NamedSchema;
             Assert.IsNotNull(ysf);
 
-            Assert.AreEqual("p.Z", xsg.FullName);
-            Assert.AreEqual("q.Z", ysf.FullName);
+            Assert.AreEqual("p.Z", xsg.Name.full);
+            Assert.AreEqual("q.Z", ysf.Name.full);
         }
 
         [Test]

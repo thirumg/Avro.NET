@@ -8,18 +8,18 @@ namespace Avro
     {
         public Name Name { get; private set; }
 
-        public string Namespace
-        {
-            get { return this.Name.space; }
-        }
+        //public string Namespace
+        //{
+        //    get { return this.Name.space; }
+        //}
 
-        public string FullName
-        {
-            get
-            {
-                return this.Name.full;
-            }
-        }
+        //public string FullName
+        //{
+        //    get
+        //    {
+        //        return this.Name.full;
+        //    }
+        //}
         public NamedSchema(string type, Name name, Names names)
             : base(type)
         {
@@ -66,7 +66,7 @@ namespace Avro
             this.Name.WriteJson(writer);
 
             //JsonHelper.writeIfNotNullOrEmpty(writer, "name", this.Name);
-            JsonHelper.writeIfNotNullOrEmpty(writer, "namespace", this.Namespace);
+            JsonHelper.writeIfNotNullOrEmpty(writer, "namespace", this.Name.space);
         }
     }
 }

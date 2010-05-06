@@ -11,5 +11,11 @@ namespace Avro
         {
 
         }
+
+        public AvroException(string s, Exception inner)
+            : base(s, inner)
+        {
+
+        }
     }
 }

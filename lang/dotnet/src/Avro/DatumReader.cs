@@ -43,6 +43,7 @@ namespace Avro
             //}
             //return true;
         }
+
         static bool matchSchemas(Schema writers_schema, Schema readers_schema)
         {
             string w_type = writers_schema.Type, r_type = readers_schema.Type;
@@ -205,7 +206,6 @@ namespace Avro
                 }
             }
         }
-
 
         private void SkipArray(ArraySchema writers_schema, BinaryDecoder decoder)
         {

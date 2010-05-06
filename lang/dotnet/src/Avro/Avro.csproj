@@ -48,10 +48,12 @@
     <Compile Include="BinaryDecoder.cs" />
     <Compile Include="BinaryEncoder.cs" />
     <Compile Include="BooleanSchema.cs" />
+    <Compile Include="CodeGen\AvroGen.cs" />
     <Compile Include="DatumReader.cs" />
     <Compile Include="DatumWriter.cs" />
     <Compile Include="EnumHelper.cs" />
     <Compile Include="EnumSchema.cs" />
+    <Compile Include="ErrorSchema.cs" />
     <Compile Include="Field.cs" />
     <Compile Include="FixedSchema.cs" />
     <Compile Include="JsonHelper.cs" />
@@ -67,6 +69,7 @@
     <Compile Include="Protocol.cs" />
     <Compile Include="ProtocolParseException.cs" />
     <Compile Include="RecordSchema.cs" />
+    <Compile Include="RPC\RPCClient.cs" />
     <Compile Include="Schema.cs" />
     <Compile Include="SchemaParseException.cs" />
     <Compile Include="SchemaResolutionException.cs" />

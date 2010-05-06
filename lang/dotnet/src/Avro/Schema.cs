@@ -55,6 +55,11 @@ namespace Avro
         public const string MAP = "map";
         public const string STRING = "string";
         public const string BYTES = "bytes";
+        public const string NULL = "null";
+        public const string ENUM = "enum";
+        public const string FIXED = "fixed";
+        public const string RECORD = "record";
+        public const string ERROR = "error";
         private static readonly Logger log = new Logger();
         public string Type { get; private set; }
         private IDictionary<string, string> Props;
@@ -147,9 +152,6 @@ namespace Avro
                     string snamespace = JsonHelper.getOptionalString(j, "namespace");
                     Name name = Name.make_fullname(sname, snamespace);
 
-                    
-
-
                     string doc = JsonHelper.getOptionalString(j, "doc");
 
                     switch (type)
@@ -183,7 +185,7 @@ namespace Avro
 
 
 
-                            RecordSchema record = new RecordSchema(name, null, names);
+                            ErrorSchema record = new ErrorSchema(name, null, names);
                             if (null != name && !names.Contains(schema)) names.Add(record);
                             if (null != jfields)
                                 if (jfields.Type == JTokenType.Array)

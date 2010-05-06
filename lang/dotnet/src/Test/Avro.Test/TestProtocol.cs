@@ -8,6 +8,7 @@ namespace Avro.Test
     [TestFixture]
     public class TestProtocol
     {
+        
         [Test]
         public void Test()
         {

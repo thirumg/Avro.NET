@@ -64,7 +64,7 @@ namespace Avro
         {
             if (log.IsDebugEnabled) log.DebugFormat("make_fullname(string, string) - name=\"{0}\", snamespace=\"{1}\"", name, snamespace);
             Name n = new Name(name, snamespace);
-            if (log.IsDebugEnabled) log.DebugFormat("make_fullname(string, string) - n= \"{0}\"", n);
+            if (log.IsDebugEnabled) log.DebugFormat("make_fullname(string, string) - name= \"{0}\"", n);
 
             return n;
         }
