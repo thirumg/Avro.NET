@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Text;
 using System.IO;
 
 namespace Avro
@@ -8,7 +7,7 @@ namespace Avro
     /// <summary>
     /// Write leaf values.
     /// </summary>
-    public class BinaryEncoder
+    public class BinaryEncoder:Encoder
     {
         public Stream Stream { get; private set; }
         /// <summary>
@@ -51,13 +50,13 @@ namespace Avro
         /// <param name="datum"></param>
         public void write_int(int datum)
         {
-            write_long(datum);
+            WriteLong(datum);
         }
         /// <summary>
         /// int and long values are written using variable-length, zig-zag coding.
         /// </summary>
         /// <param name="datum"></param>
-        public void write_long(long datum)
+        public void WriteLong(long datum)
         {
             ulong n = Util.Zig(datum);// move sign to low-order bit
             while ((n & ~0x7FUL) != 0)
@@ -115,21 +114,22 @@ namespace Avro
         /// <summary>
         /// Bytes are encoded as a long followed by that many bytes of data.
         /// </summary>
-        /// <param name="datum"></param>
-        public void write_bytes(byte[] datum)
+        /// <param name="value"></param>
+        /// 
+        public override void WriteBytes(byte[] value)
         {
-            write_long(datum.Length);
-            write(datum);
+            WriteLong(value.Length);
+            write(value);
         }
         /// <summary>
         /// A string is encoded as a long followed by
         /// that many bytes of UTF-8 encoded character data.
         /// </summary>
-        /// <param name="s"></param>
-        public void write_utf8(string s)
+        /// <param name="value"></param>
+        public override void WriteString(string value)
         {
-            byte[] buffer = Encoding.UTF8.GetBytes(s);
-            write_bytes(buffer);
+            byte[] buffer = System.Text.Encoding.UTF8.GetBytes(value);
+            WriteBytes(buffer);
         }
 
         public void flush()
@@ -147,6 +147,34 @@ namespace Avro
             //BitMem bitMem = new BitMem();
             //bitMem.f = f;
             //return bitMem.i;
+        }
+
+        public override void StartItem()
+        {
+
+        }
+
+        public override void WriteMapStart()
+        {
+            
+        }
+
+        public override void SetItemCount(int value)
+        {
+            if (value > 0)
+            {
+                WriteLong(value);
+            }
+        }
+
+        public override void WriteMapEnd()
+        {
+            WriteLong(0);
+        }
+
+        public override void Flush()
+        {
+            this.Stream.Flush();
         }
     }
 }

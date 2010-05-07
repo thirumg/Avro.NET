@@ -38,7 +38,7 @@ namespace Avro.Test
                 long expectedValue = random.Next();
                 MemoryStream iostr = new MemoryStream();
                 BinaryEncoder encoder = new BinaryEncoder(iostr);
-                encoder.write_long(expectedValue);
+                encoder.WriteLong(expectedValue);
                 iostr.Flush();
                 iostr.Position = 0;
 
@@ -61,7 +61,7 @@ namespace Avro.Test
                 string expectedValue = Convert.ToBase64String(buffers);
                 MemoryStream iostr = new MemoryStream();
                 BinaryEncoder encoder = new BinaryEncoder(iostr);
-                encoder.write_utf8(expectedValue);
+                encoder.WriteString(expectedValue);
 
 
                 iostr.Position = 0;
@@ -137,7 +137,7 @@ namespace Avro.Test
                 random.NextBytes(expectedValue);
                 MemoryStream iostr = new MemoryStream();
                 BinaryEncoder encoder = new BinaryEncoder(iostr);
-                encoder.write_bytes(expectedValue);
+                encoder.WriteBytes(expectedValue);
                 iostr.Position = 0;
                 BinaryDecoder decoder = new BinaryDecoder(iostr);
                 byte[] actual = decoder.ReadBytes();

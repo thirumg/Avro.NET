@@ -379,7 +379,7 @@ namespace Avro.Test
             {
                 Schema.Parse(json);
             }
-            catch (SchemaParseException e)
+            catch (SchemaParseException)
             {
                 return;
             }

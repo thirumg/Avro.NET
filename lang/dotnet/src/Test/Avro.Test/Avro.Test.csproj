@@ -41,13 +41,13 @@
   <ItemGroup>
     <Compile Include="BinaryEncodingTests.cs" />
     <Compile Include="CodeGen\AvroGen.cs" />
+    <Compile Include="DataFileWriterTests.cs" />
     <Compile Include="ExampleProtocol.cs" />
     <Compile Include="ExampleSchema.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="TestIO.cs" />
     <Compile Include="TestProtocol.cs" />
     <Compile Include="TestSchema.cs" />
-    <Compile Include="TestSchema2.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\Avro\Avro.csproj">
