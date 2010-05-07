@@ -399,21 +399,24 @@ namespace Avro
 
         internal virtual void writeJson(Newtonsoft.Json.JsonTextWriter writer)
         {
-            //writeStartObject(writer);
+            writeStartObject(writer);
 
-            //WriteProperties(writer);
+            WriteProperties(writer);
 
-            //foreach (KeyValuePair<string, string> kp in this.Props)
-            //{
-            //    if (log.IsDebugEnabled) log.DebugFormat("Processing \"{0}\"", kp.Key);
-            //    if (RESERVED_PROPS.ContainsKey(kp.Key))
-            //        continue;
+            foreach (KeyValuePair<string, string> kp in this.Props)
+            {
+                if (log.IsDebugEnabled) log.DebugFormat("Processing \"{0}\"", kp.Key);
+                if (RESERVED_PROPS.ContainsKey(kp.Key))
+                {
+                    if (log.IsWarnEnabled) log.WarnFormat("Skipping reserved property \"{0}\"", kp.Key);
+                    continue;
+                }
 
-            //    writer.WritePropertyName(kp.Key);
-            //    writer.WriteValue(kp.Value);
-            //}
+                writer.WritePropertyName(kp.Key);
+                writer.WriteValue(kp.Value);
+            }
 
-            //writer.WriteEndObject();
+            writer.WriteEndObject();
         }
 
         public string this[string key]
