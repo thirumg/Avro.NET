@@ -12,8 +12,6 @@ namespace Avro.Test
         {
             Stream iostr = new FileStream("Test.bin", FileMode.Create);
 
-
-
             using (iostr)
             {
                 GenericDatumWriter<string> datumWriter = new GenericDatumWriter<string>();
@@ -21,20 +19,34 @@ namespace Avro.Test
                 Schema schema = new PrimitiveSchema("string");
                 DataFileWriter<string> test2 = fileWriter.create(schema, iostr);
 
-                for (int i = 0; i < 5000000; i++)
+                for (int i = 0; i < 5000; i++)
                 {
-                    string test = string.Format("Test {0:###,###,##0}", i);
+                    string test = string.Format("Test {0:###,###,##0}", i * 100);
                     fileWriter.Append(test);
 
 
 
                 }
                 test2.Flush();
+            }
+
+            iostr = new FileStream("Test.bin", FileMode.Open);
+
+            using (iostr)
+            {
+                GenericDatumReader<string> datumReader = new GenericDatumReader<string>();
+                DataFileReader<string> filereader = new DataFileReader<string>(iostr, datumReader);
+
+
+
+
 
 
             }
 
-            
+
+
+
 
 
         }

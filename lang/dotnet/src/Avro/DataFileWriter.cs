@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Text;
 using System.IO;
 using System.IO.Compression;
+using Avro.IO;
 
 namespace Avro
 {
@@ -85,9 +85,19 @@ namespace Avro
 
             _Encoder.WriteMapEnd();
             _Encoder.Flush();
-            _iostr.Write(this._Sync, 0, this._Sync.Length);
+            writeSync();
             
+
             return this;
+        }
+
+        private long _LastSync = 0;
+
+        private void writeSync()
+        {
+            _iostr.Write(this._Sync, 0, this._Sync.Length);
+            _iostr.Flush();
+            _LastSync = _iostr.Position;
         }
 
         private void init(Stream outs)
@@ -101,7 +111,7 @@ namespace Avro
 
         private void setMetaInternal(string key, string value)
         {
-            byte[] buffer = Encoding.UTF8.GetBytes(value);
+            byte[] buffer = System.Text.Encoding.UTF8.GetBytes(value);
             setMetaInternal(key, buffer);
         }
 
@@ -125,7 +135,8 @@ namespace Avro
 
         public void Dispose()
         {
-            
+            Flush();
+            this._iostr.Dispose();
         }
 
         public void Append(T test)

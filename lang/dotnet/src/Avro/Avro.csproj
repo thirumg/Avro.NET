@@ -42,6 +42,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ArrayHelper.cs" />
     <Compile Include="ArraySchema.cs" />
     <Compile Include="AvroException.cs" />
     <Compile Include="AvroTypeException.cs" />
@@ -54,12 +55,13 @@
     <Compile Include="DataFileWriter.cs" />
     <Compile Include="DatumReader.cs" />
     <Compile Include="DatumWriter.cs" />
-    <Compile Include="Encoder.cs" />
-    <Compile Include="EnumHelper.cs" />
+    <Compile Include="IO\Decoder.cs" />
+    <Compile Include="IO\Encoder.cs" />
     <Compile Include="EnumSchema.cs" />
     <Compile Include="ErrorSchema.cs" />
     <Compile Include="Field.cs" />
     <Compile Include="FixedSchema.cs" />
+    <Compile Include="GenericDatumReader.cs" />
     <Compile Include="GenericDatumWriter.cs" />
     <Compile Include="JsonHelper.cs" />
     <Compile Include="Logger.cs" />

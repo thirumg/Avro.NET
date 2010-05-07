@@ -218,5 +218,41 @@ namespace Avro
         {
             throw new NotImplementedException();
         }
+
+        public void ReadFixed(byte[] buffer)
+        {
+            ReadFixed(buffer, 0, buffer.Length);
+        }
+
+        private void ReadFixed(byte[] buffer, int start, int length)
+        {
+            //TODO: Look at this it's lame
+            this.Stream.Read(buffer, start, length);
+        }
+
+        protected long doReadItemCount()
+        {
+            long result = ReadLong();
+            if (result < 0)
+            {
+                ReadLong(); // Consume byte-count if present
+                result = -result;
+            }
+            return result;
+        }
+
+        public long ReadMapStart()
+        {
+            return ReadLong();
+        }
+
+        public string ReadString()
+        {
+            int length = ReadInt();
+            byte[] buffer = new byte[length];
+            //TODO: Fix this because it's lame;
+            ReadFixed(buffer);
+            return Encoding.UTF8.GetString(buffer);
+        }
     }
 }

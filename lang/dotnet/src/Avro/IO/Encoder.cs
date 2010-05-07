@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace Avro
+namespace Avro.IO
 {
     public abstract class Encoder
     {
