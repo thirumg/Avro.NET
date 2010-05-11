@@ -9,7 +9,17 @@ namespace Avro
     {
         public class Parameter
         {
+            /// <summary>
+            /// Name of the parameter
+            /// </summary>
             public string Name { get; set; }
+            /// <summary>
+            /// Documentation for the parameter
+            /// </summary>
+            public string Doc { get; set; }
+            /// <summary>
+            /// Schema for the parameter
+            /// </summary>
             public Schema Schema { get; set; }
 
             internal void writeJson(Newtonsoft.Json.JsonTextWriter writer)

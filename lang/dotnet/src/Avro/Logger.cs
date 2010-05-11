@@ -5,7 +5,7 @@ using System.Diagnostics;
 using System.Reflection;
 namespace Avro
 {
-    sealed class Logger
+    public sealed class Logger
     {
         private readonly Type _Type;
 #if(LOG4NET)
@@ -27,6 +27,17 @@ namespace Avro
         }
 #if(LOG4NET)
         #region Log4Net Implementation
+
+        public static void ConfigureForUnitTesting()
+        {
+            log4net.Config.BasicConfigurator.Configure(
+                new log4net.Appender.TraceAppender(
+                    new log4net.Layout.PatternLayout("%date [%thread] %-5level %logger [%property{NDC}] - %message%newline")
+                    )
+               );
+
+
+        }
 
         public void Debug(object message, Exception exception)
         {

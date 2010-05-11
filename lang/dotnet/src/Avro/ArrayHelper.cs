@@ -4,7 +4,7 @@ using System.Text;
 
 namespace Avro
 {
-    static class ArrayHelper<T>
+    public static class ArrayHelper<T>
     {
         public static bool Equals(T[] a, T[] b)
         {

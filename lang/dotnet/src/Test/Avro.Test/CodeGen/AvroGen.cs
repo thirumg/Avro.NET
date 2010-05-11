@@ -82,7 +82,48 @@ namespace Avro.Test.CodeGen
             writeSource(outputFile, cu);
         }
 
+        [TestCase]
+        public void GenerateDecoderInterface()
+        {
+            Type decoderType = typeof(Avro.BinaryDecoder);
 
+            CodeTypeDeclaration typeDeclare = new CodeTypeDeclaration("Decoder");
+            typeDeclare.IsInterface = true;
+            typeDeclare.Attributes = MemberAttributes.Public;
+
+            List<CodeMemberMethod> methods = new List<CodeMemberMethod>();
+
+            foreach (System.Reflection.MethodInfo method in decoderType.GetMethods())
+            {
+                if (!method.Name.StartsWith("Read")&&!method.Name.StartsWith("Skip"))
+                    continue;
+
+                CodeMemberMethod genMethod = new CodeMemberMethod();
+                genMethod.Name = method.Name;
+                genMethod.ReturnType = new CodeTypeReference(method.ReturnType);
+
+                foreach (System.Reflection.ParameterInfo parameter in method.GetParameters())
+                {
+                    CodeParameterDeclarationExpression parm = new CodeParameterDeclarationExpression(parameter.ParameterType, parameter.Name);
+                    genMethod.Parameters.Add(parm);
+                }
+
+                methods.Add(genMethod);
+            }
+            methods.Sort(delegate(CodeMemberMethod a, CodeMemberMethod b) { return a.Name.CompareTo(b.Name); });
+            typeDeclare.Members.AddRange(methods.ToArray());
+            Microsoft.CSharp.CSharpCodeProvider csp = new Microsoft.CSharp.CSharpCodeProvider();
+            System.CodeDom.Compiler.CodeGeneratorOptions options = new CodeGeneratorOptions();
+            options.BracingStyle = "C";
+            options.BlankLinesBetweenMembers = false;
+            using (StringWriter writer = new StringWriter())
+            {
+                csp.GenerateCodeFromType(typeDeclare, writer, options);
+                Console.WriteLine(writer);
+            }
+
+
+        }
 
 
         private static void writeSource(string outputFile, CodeCompileUnit cu)

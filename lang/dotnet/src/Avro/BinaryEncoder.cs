@@ -9,28 +9,27 @@ namespace Avro
     /// <summary>
     /// Write leaf values.
     /// </summary>
-    public class BinaryEncoder:Encoder
+    public class BinaryEncoder : Encoder
     {
-        public Stream Stream { get; private set; }
         /// <summary>
         /// Write leaf values.
         /// </summary>
-        /// <param name="s">writer is a Python object on which we can call write.</param>
-        public BinaryEncoder(Stream s)
+
+        public BinaryEncoder()
         {
-            if (null == s) throw new ArgumentNullException("s", "s cannot be null.");
-            this.Stream = s;
+
         }
 
-        private void write(params byte[] bytes)
+        private void write(Stream Stream, params byte[] bytes)
         {
             Stream.Write(bytes, 0, bytes.Length);
         }
-        
+
         /// <summary>
         /// null is written as zero bytes
         /// </summary>
-        public void write_null()
+
+        public void WriteNull(Stream Stream)
         {
 
         }
@@ -38,45 +37,43 @@ namespace Avro
         /// a boolean is written as a single byte whose value is either 0 (false) or 1 (true).
         /// </summary>
         /// <param name="datum"></param>
-        public void write_boolean(bool datum)
+        public void WriteBoolean(Stream Stream, bool datum)
         {
-            if (datum)
-                write(1);
-            else
-                write(0);
+            byte value = (byte)(datum ? 1 : 0);
+            write(Stream, value);
         }
 
         /// <summary>
         /// int and long values are written using variable-length, zig-zag coding.
         /// </summary>
         /// <param name="datum"></param>
-        public void write_int(int datum)
+        public void WriteInt(Stream Stream, int datum)
         {
-            WriteLong(datum);
+            WriteLong(Stream, datum);
         }
         /// <summary>
         /// int and long values are written using variable-length, zig-zag coding.
         /// </summary>
         /// <param name="datum"></param>
-        public void WriteLong(long datum)
+        public void WriteLong(Stream Stream, long datum)
         {
             ulong n = Util.Zig(datum);// move sign to low-order bit
             while ((n & ~0x7FUL) != 0)
             {
-                write((byte)((n & 0x7f) | 0x80));
+                write(Stream, (byte)((n & 0x7f) | 0x80));
                 n >>= 7;
             }
-            write((byte)n);
+            write(Stream, (byte)n);
         }
 
- 
+
         /// <summary>
         /// A float is written as 4 bytes.
         /// The float is converted into a 32-bit integer using a method equivalent to
         /// Java's floatToIntBits and then encoded in little-endian format.
         /// </summary>
         /// <param name="datum"></param>
-        public void write_float(float datum)
+        public void WriteFloat(Stream Stream, float datum)
         {
             byte[] buffer = null;
             buffer = BitConverter.GetBytes(datum);
@@ -85,7 +82,7 @@ namespace Avro
                 Array.Reverse(buffer);
             }
 
-            write(buffer);
+            write(Stream, buffer);
 
             //int bits = floatToRawIntBits(datum);
             //write(BitConverter.GetBytes(datum));
@@ -100,44 +97,40 @@ namespace Avro
         ///Java's doubleToLongBits and then encoded in little-endian format.
         /// </summary>
         /// <param name="datum"></param>
-        public void write_double(double datum)
+        public void WriteDouble(Stream Stream, double datum)
         {
             long bits = BitConverter.DoubleToInt64Bits(datum);
 
-            write((byte)((bits) & 0xFF));
-            write((byte)((bits >> 8) & 0xFF));
-            write((byte)((bits >> 16) & 0xFF));
-            write((byte)((bits >> 24) & 0xFF));
-            write((byte)((bits >> 32) & 0xFF));
-            write((byte)((bits >> 40) & 0xFF));
-            write((byte)((bits >> 48) & 0xFF));
-            write((byte)((bits >> 56) & 0xFF));
+            write(Stream, (byte)((bits) & 0xFF));
+            write(Stream, (byte)((bits >> 8) & 0xFF));
+            write(Stream, (byte)((bits >> 16) & 0xFF));
+            write(Stream, (byte)((bits >> 24) & 0xFF));
+            write(Stream, (byte)((bits >> 32) & 0xFF));
+            write(Stream, (byte)((bits >> 40) & 0xFF));
+            write(Stream, (byte)((bits >> 48) & 0xFF));
+            write(Stream, (byte)((bits >> 56) & 0xFF));
         }
         /// <summary>
         /// Bytes are encoded as a long followed by that many bytes of data.
         /// </summary>
         /// <param name="value"></param>
         /// 
-        public override void WriteBytes(byte[] value)
+        public void WriteBytes(Stream Stream, byte[] value)
         {
-            WriteLong(value.Length);
-            write(value);
+            WriteLong(Stream, value.Length);
+            write(Stream, value);
         }
         /// <summary>
         /// A string is encoded as a long followed by
         /// that many bytes of UTF-8 encoded character data.
         /// </summary>
         /// <param name="value"></param>
-        public override void WriteString(string value)
+        public void WriteString(Stream Stream, string value)
         {
             byte[] buffer = System.Text.Encoding.UTF8.GetBytes(value);
-            WriteBytes(buffer);
+            WriteBytes(Stream, buffer);
         }
 
-        public void flush()
-        {
-            this.Stream.Flush();
-        }
 
         public static int floatToRawIntBits(float f)
         {
@@ -151,32 +144,27 @@ namespace Avro
             //return bitMem.i;
         }
 
-        public override void StartItem()
+        public void StartItem(Stream Stream)
         {
 
         }
 
-        public override void WriteMapStart()
+        public void WriteMapStart(Stream Stream)
         {
-            
+
         }
 
-        public override void SetItemCount(int value)
+        public void SetItemCount(Stream Stream, int value)
         {
             if (value > 0)
             {
-                WriteLong(value);
+                WriteLong(Stream, value);
             }
         }
 
-        public override void WriteMapEnd()
+        public void WriteMapEnd(Stream Stream)
         {
-            WriteLong(0);
-        }
-
-        public override void Flush()
-        {
-            this.Stream.Flush();
+            WriteLong(Stream, 0);
         }
     }
 }

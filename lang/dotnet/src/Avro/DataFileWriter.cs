@@ -73,18 +73,18 @@ namespace Avro
             init(outs);
             _iostr.Write(DataFileConstants.MAGIC, 0, DataFileConstants.MAGIC.Length);
 
-            _Encoder.WriteMapStart();
-            _Encoder.SetItemCount(_metadata.Count);
+            _Encoder.WriteMapStart(_iostr);
+            _Encoder.SetItemCount(_iostr,_metadata.Count);
 
             foreach (KeyValuePair<string, byte[]> entry in _metadata)
             {
-                _Encoder.StartItem();
-                _Encoder.WriteString(entry.Key);
-                _Encoder.WriteBytes(entry.Value);
+                _Encoder.StartItem(_iostr);
+                _Encoder.WriteString(_iostr, entry.Key);
+                _Encoder.WriteBytes(_iostr, entry.Value);
             }
 
-            _Encoder.WriteMapEnd();
-            _Encoder.Flush();
+            _Encoder.WriteMapEnd(_iostr);
+            //_Encoder.Flush();
             writeSync();
             
 
@@ -106,7 +106,7 @@ namespace Avro
             int bufferSize = Math.Min((int)(_SyncInterval * 1.25), int.MaxValue / 2 - 1);
 
             this._iostr = new BufferedStream(outs, bufferSize);
-            this._Encoder = new BinaryEncoder(_iostr);
+            //this._Encoder = new BinaryEncoder(_iostr);
         }
 
         private void setMetaInternal(string key, string value)

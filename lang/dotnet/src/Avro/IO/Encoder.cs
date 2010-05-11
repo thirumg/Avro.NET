@@ -1,17 +1,22 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Text;
+using System.IO;
 
 namespace Avro.IO
 {
-    public abstract class Encoder
+    public interface Encoder
     {
-        public abstract void WriteMapStart();
-        public abstract void SetItemCount(int value);
-        public abstract void StartItem();
-        public abstract void WriteString(string value);
-        public abstract void WriteBytes(byte[] value);
-        public abstract void WriteMapEnd();
-        public abstract void Flush();
+        void WriteMapStart(Stream iostr);
+        void SetItemCount(Stream iostr, int value);
+        void StartItem(Stream iostr);
+        void WriteString(Stream iostr, string value);
+        void WriteBytes(Stream iostr, byte[] value);
+        void WriteMapEnd(Stream iostr);
+        void WriteInt(Stream iostr, int value);
+        void WriteLong(Stream iostr, long value);
+        void WriteFloat(Stream iostr, float value);
+        void WriteDouble(Stream iostr, double value);
+        void WriteBoolean(Stream iostr, bool value);
+        void WriteNull(Stream iostr);
     }
 }

@@ -28,7 +28,7 @@ namespace Avro
                 keylookup.Add(key, key);
             }
             PrimitiveKeyLookup = keylookup;
-
+                
 
 
             ////PrimitiveValueLookup = EnumHelper<SchemaType>.CreateValueLookup(SupportedTypes);
@@ -59,6 +59,11 @@ namespace Avro
         public static bool IsPrimitive(string json)
         {
             return PrimitiveKeyLookup.ContainsKey(json.Trim('\"'));
+        }
+
+        public override int GetHashCode()
+        {
+            return this.Type.GetHashCode();
         }
     }
 }

@@ -37,11 +37,10 @@ namespace Avro.Test
                 GenericDatumReader<string> datumReader = new GenericDatumReader<string>();
                 DataFileReader<string> filereader = new DataFileReader<string>(iostr, datumReader);
 
+                foreach (string test in filereader.GetItems())
+                {
 
-
-
-
-
+                }
             }
 
 

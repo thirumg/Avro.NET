@@ -1,31 +1,22 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Text;
 using System.IO;
+using Avro.IO;
 
 namespace Avro
 {
     /// <summary>
     /// Read leaf values.
     /// </summary>
-    public class BinaryDecoder
+    public class BinaryDecoder:Decoder
     {
-        public Stream Stream { get; private set; }
-        public BinaryDecoder(Stream s)
-        {
-            if (null == s) throw new ArgumentNullException("s", "s cannot be null.");
-            this.Stream = s;
-        }
-
-
-
         //def read(self, n):
         //  """
         //  Read n bytes.
         //  """
         //  return self.reader.read(n)
 
-        private byte[] read(long p)
+        private byte[] read(Stream Stream, long p)
         {
             byte[] buffer = new byte[p];
 
@@ -48,9 +39,9 @@ namespace Avro
         /// whose value is either 0 (false) or 1 (true).
         /// </summary>
         /// <returns></returns>
-        public bool ReadBool()
+        public bool ReadBool(Stream Stream)
         {
-            return read() == 1;
+            return read(Stream) == 1;
         }
 
         private byte ord(byte[] p)
@@ -62,23 +53,23 @@ namespace Avro
         /// </summary>
         /// <param name="?"></param>
         /// <returns></returns>
-        public int ReadInt()
+        public int ReadInt(Stream Stream)
         {
-            return (int)ReadLong();
+            return (int)ReadLong(Stream);
         }
         /// <summary>
         /// int and long values are written using variable-length, zig-zag coding.
         /// </summary>
         /// <param name="?"></param>
         /// <returns></returns>
-        public long ReadLong()
+        public long ReadLong(Stream Stream)
         {
-            byte b = read();
+            byte b = read(Stream);
             ulong n = b & 0x7FUL;
             int shift = 7;
             while ((b & 0x80) != 0)
             {
-                b = read();
+                b = read(Stream);
                 n |= (b & 0x7FUL) << shift;
                 shift += 7;
             }
@@ -86,9 +77,9 @@ namespace Avro
 
         }
 
-        private byte read()
+        private byte read(Stream Stream)
         {
-            return (byte)this.Stream.ReadByte();
+            return (byte)Stream.ReadByte();
         }
         
 
@@ -98,19 +89,19 @@ namespace Avro
         /// Java's floatToIntBits and then encoded in little-endian format.
         /// </summary>
         /// <returns></returns>
-        public float ReadFloat()
+        public float ReadFloat(Stream Stream)
         {
-            byte[] buffer = read(4);
+            byte[] buffer = read(Stream, 4);
 
             if (!BitConverter.IsLittleEndian)
                 Array.Reverse(buffer);
 
             return BitConverter.ToSingle(buffer, 0);
             
-            //int bits = (this.Stream.ReadByte() & 0xff |
-            //(this.Stream.ReadByte()) & 0xff << 8 |
-            //(this.Stream.ReadByte()) & 0xff << 16 |
-            //(this.Stream.ReadByte()) & 0xff << 24);
+            //int bits = (Stream.ReadByte() & 0xff |
+            //(Stream.ReadByte()) & 0xff << 8 |
+            //(Stream.ReadByte()) & 0xff << 16 |
+            //(Stream.ReadByte()) & 0xff << 24);
             //return intBitsToFloat(bits);
         }
 
@@ -126,16 +117,16 @@ namespace Avro
         /// </summary>
         /// <param name="?"></param>
         /// <returns></returns>
-        public double ReadDouble()
+        public double ReadDouble(Stream Stream)
         {
-            long bits = (this.Stream.ReadByte() & 0xffL) |
-              (this.Stream.ReadByte() & 0xffL) << 8 |
-              (this.Stream.ReadByte() & 0xffL) << 16 |
-              (this.Stream.ReadByte() & 0xffL) << 24 |
-              (this.Stream.ReadByte() & 0xffL) << 32 |
-              (this.Stream.ReadByte() & 0xffL) << 40 |
-              (this.Stream.ReadByte() & 0xffL) << 48 |
-              (this.Stream.ReadByte() & 0xffL) << 56;
+            long bits = (Stream.ReadByte() & 0xffL) |
+              (Stream.ReadByte() & 0xffL) << 8 |
+              (Stream.ReadByte() & 0xffL) << 16 |
+              (Stream.ReadByte() & 0xffL) << 24 |
+              (Stream.ReadByte() & 0xffL) << 32 |
+              (Stream.ReadByte() & 0xffL) << 40 |
+              (Stream.ReadByte() & 0xffL) << 48 |
+              (Stream.ReadByte() & 0xffL) << 56;
 
             return BitConverter.Int64BitsToDouble(bits);
         }
@@ -144,73 +135,64 @@ namespace Avro
         /// Bytes are encoded as a long followed by that many bytes of data. 
         /// </summary>
         /// <returns></returns>
-        public byte[] ReadBytes()
+        public byte[] ReadBytes(Stream Stream)
         {
-            return read(ReadLong());
+            return read(Stream, ReadLong(Stream));
         }
 
-        /// <summary>
-        ///     A string is encoded as a long followed by
-        ///  that many bytes of UTF-8 encoded character data.
-        /// </summary>
-        /// <param name="?"></param>
-        /// <returns></returns>
-        public string ReadUTF8()
-        {
-            return Encoding.UTF8.GetString(ReadBytes());
-        }
-        public void SkipNull()
+
+        public void SkipNull(Stream Stream)
         {
 
         }
-        public void SkipBoolean()
+        public void SkipBoolean(Stream Stream)
         {
-            Skip(1);
+            Skip(Stream, 1);
         }
 
-        private void Skip(int p)
+        private void Skip(Stream Stream, int p)
         {
-            this.Stream.Seek(p, SeekOrigin.Current);
+            Stream.Seek(p, SeekOrigin.Current);
         }
 
-        private void Skip(long p)
+        private void Skip(Stream Stream, long p)
         {
-            this.Stream.Seek(p, SeekOrigin.Current);
+            Stream.Seek(p, SeekOrigin.Current);
         }
 
-        public void SkipInt()
+        public void SkipInt(Stream Stream)
         {
-            SkipLong();
+            SkipLong(Stream);
         }
 
-        public void SkipLong()
+        public void SkipLong(Stream Stream)
         {
-            int b = ord(read(1));
+            int b = ord(read(Stream,1));
             while ((b & 0x80) != 0)
             {
-                b = ord(read(1));
+                b = ord(read(Stream,1));
             }
         }
 
-        public void SkipFloat()
+        public void SkipFloat(Stream Stream)
         {
-            Skip(4);
+            Skip(Stream, 4);
         }
 
-        public void SkipDouble()
+        public void SkipDouble(Stream Stream)
         {
-            Skip(8);
+            Skip(Stream, 8);
         }
-        public void SkipBytes()
+        public void SkipBytes(Stream Stream)
         {
-            Skip(ReadLong());
+            Skip(Stream, ReadLong(Stream));
         }
 
  
 
-        public void SkipUTF8()
+        public void SkipUTF8(Stream Stream)
         {
-            SkipBytes();
+            SkipBytes(Stream);
         }
 
 
@@ -219,40 +201,40 @@ namespace Avro
             throw new NotImplementedException();
         }
 
-        public void ReadFixed(byte[] buffer)
+        public void ReadFixed(Stream Stream, byte[] buffer)
         {
-            ReadFixed(buffer, 0, buffer.Length);
+            ReadFixed(Stream, buffer, 0, buffer.Length);
         }
 
-        private void ReadFixed(byte[] buffer, int start, int length)
+        private void ReadFixed(Stream Stream, byte[] buffer, int start, int length)
         {
             //TODO: Look at this it's lame
-            this.Stream.Read(buffer, start, length);
+            Stream.Read(buffer, start, length);
         }
 
-        protected long doReadItemCount()
+        protected long doReadItemCount(Stream Stream)
         {
-            long result = ReadLong();
+            long result = ReadLong(Stream);
             if (result < 0)
             {
-                ReadLong(); // Consume byte-count if present
+                ReadLong(Stream); // Consume byte-count if present
                 result = -result;
             }
             return result;
         }
 
-        public long ReadMapStart()
+        public long ReadMapStart(Stream Stream)
         {
-            return ReadLong();
+            return ReadLong(Stream);
         }
 
-        public string ReadString()
+        public string ReadString(Stream Stream)
         {
-            int length = ReadInt();
+            int length = ReadInt(Stream);
             byte[] buffer = new byte[length];
             //TODO: Fix this because it's lame;
-            ReadFixed(buffer);
-            return Encoding.UTF8.GetString(buffer);
+            ReadFixed(Stream, buffer);
+            return System.Text.Encoding.UTF8.GetString(buffer);
         }
     }
 }
