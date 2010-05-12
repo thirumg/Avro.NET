@@ -250,13 +250,17 @@ namespace Avro
             
             
 
-
-            MethodInfo methodGetEnumerator = dataType.GetMethod("GetEnumerator");
-            if (log.IsDebugEnabled) log.DebugFormat(PREFIX + "methodGetEnumerator = {0}", methodGetEnumerator);
+            
             Type keyValuePairType = createType(typeof(KeyValuePair<,>), typeof(string), typeof(string));
             if (log.IsDebugEnabled) log.DebugFormat(PREFIX + "keyValuePairType = {0}", keyValuePairType);
+            Type ienumerableType = createType(typeof(IEnumerable<>), keyValuePairType);
+            if (log.IsDebugEnabled) log.DebugFormat(PREFIX + "ienumerableType = {0}", ienumerableType);
             Type enumeratorType = createType(typeof(IEnumerator<>), keyValuePairType);
             if (log.IsDebugEnabled) log.DebugFormat(PREFIX + "enumeratorType = {0}", enumeratorType);
+            MethodInfo methodGetEnumerator = ienumerableType.GetMethod("GetEnumerator");
+            if (log.IsDebugEnabled) log.DebugFormat(PREFIX + "methodGetEnumerator = {0}", methodGetEnumerator);
+
+
             MethodInfo methodGetCurrent = enumeratorType.GetMethod("get_Current");
             if (log.IsDebugEnabled) log.DebugFormat(PREFIX + "get_Current = {0}", methodGetCurrent);
 
@@ -286,8 +290,6 @@ namespace Avro
 
             MethodInfo methodDispose = typeof(IDisposable).GetMethod("Dispose");
             if (log.IsDebugEnabled) log.DebugFormat(PREFIX + "methodDispose = {0}", methodDispose);
-
-
 
             //AssemblyName assName = new AssemblyName("TestAssembly");
 
@@ -360,10 +362,7 @@ namespace Avro
             il.Emit(OpCodes.Ldloc_2);
             il.Emit(OpCodes.Brtrue_S, labelGetCurrent);
             //il.Emit(OpCodes.Leave_S, labelExceptionBlock);
-            
-
-            
-
+        
             il.BeginFinallyBlock();
             il.Emit(OpCodes.Ldloc_1);
             il.Emit(OpCodes.Ldnull);
@@ -390,8 +389,6 @@ namespace Avro
 
             //Type type = typeBuilder.CreateType();
             //assbuilder.Save(assName.Name + ".dll");
-
-
 
             return method;
             //return null;// method;
