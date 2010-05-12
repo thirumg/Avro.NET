@@ -190,7 +190,7 @@ namespace Avro
 
  
 
-        public void SkipUTF8(Stream Stream)
+        public void SkipString(Stream Stream)
         {
             SkipBytes(Stream);
         }

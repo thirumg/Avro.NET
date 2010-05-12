@@ -22,7 +22,7 @@ namespace Avro.IO
         void SkipInt(Stream Stream);
         void SkipLong(Stream Stream);
         void SkipNull(Stream Stream);
-        void SkipUTF8(Stream Stream);
+        void SkipString(Stream Stream);
     }
 
 

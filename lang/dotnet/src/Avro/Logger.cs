@@ -30,13 +30,9 @@ namespace Avro
 
         public static void ConfigureForUnitTesting()
         {
-            log4net.Config.BasicConfigurator.Configure(
-                new log4net.Appender.TraceAppender(
-                    new log4net.Layout.PatternLayout("%date [%thread] %-5level %logger [%property{NDC}] - %message%newline")
-                    )
-               );
-
-
+            log4net.Appender.TraceAppender appender = new log4net.Appender.TraceAppender();
+            appender.Layout = new log4net.Layout.PatternLayout("%date [%thread] %-5level %logger [%property{NDC}] - %message%newline");
+            log4net.Config.BasicConfigurator.Configure(appender);
         }
 
         public void Debug(object message, Exception exception)
