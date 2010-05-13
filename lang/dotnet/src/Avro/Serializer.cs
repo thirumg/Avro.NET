@@ -106,7 +106,7 @@ namespace Avro
 
 
 
-        static MethodInfo getDynamicMethod(MethodType methodType, Schema schema, Type dataType)
+        static MethodInfo getMethodInfo(MethodType methodType, Schema schema, Type dataType)
         {
             Dictionary<long, MethodInfo> proxyLookup = null;
 
@@ -135,7 +135,7 @@ namespace Avro
                     //Double check to make sure that an earlier lock didn't generate our proxy. 
                     if (!proxyLookup.TryGetValue(hashcode, out proxy))
                     {
-                        proxy = generateDynamicMethod(methodType, schema, dataType);
+                        proxy = generateMethodInfo(methodType, schema, dataType);
                         proxyLookup.Add(hashcode, proxy);
                     }
                 }
@@ -144,7 +144,7 @@ namespace Avro
             return proxy;
         }
 
-        private static MethodInfo generateDynamicMethod(MethodType methodType, Schema schema, Type dataType)
+        private static MethodInfo generateMethodInfo(MethodType methodType, Schema schema, Type dataType)
         {
             if (schema is PrimitiveSchema)
             {
@@ -171,21 +171,55 @@ namespace Avro
             throw new NotSupportedException("Schema of type " + schema.Type + " is not supported yet.");
         }
 
-        private static DynamicMethod generateArrayDecoder(ArraySchema arraySchema, Type dataType)
+        private static MethodInfo generateArrayDecoder(ArraySchema arraySchema, Type dataType)
         {
 
             throw new NotImplementedException();
         }
 
-        private static DynamicMethod generateArrayEncoder(ArraySchema arraySchema, Type dataType)
+        private static MethodInfo generateArrayEncoder(ArraySchema arraySchema, Type dataType)
         {
             if (!dataType.IsArray)
                 throw new NotSupportedException();
             throw new NotImplementedException();
         }
 
+        static class EncoderHelper
+        {
+            private static readonly Logger log;
+            public static MethodInfo WriteMapStart;
+            public static MethodInfo SetItemCount;
+            public static MethodInfo StartItem;
+            public static MethodInfo WriteString;
+            public static MethodInfo WriteMapEnd;
 
-        public class DecoderHelper
+            static EncoderHelper()
+            {
+                const string PREFIX = "..ctor() - ";
+                log = new Logger();
+
+                WriteMapStart = EncoderType.GetMethod("WriteMapStart");
+                SetItemCount = EncoderType.GetMethod("SetItemCount");
+                StartItem = EncoderType.GetMethod("StartItem");
+                WriteString = EncoderType.GetMethod("WriteString");
+                WriteMapEnd = EncoderType.GetMethod("WriteMapEnd");
+
+                if (log.IsDebugEnabled)
+                {
+                    log.DebugFormat(PREFIX + "WriteMapStart = {0}", WriteMapStart);
+                    log.DebugFormat(PREFIX + "SetItemCount = {0}", SetItemCount);
+                    log.DebugFormat(PREFIX + "StartItem = {0}", StartItem);
+                    log.DebugFormat(PREFIX + "methodWriteString = {0}", WriteString);
+                    log.DebugFormat(PREFIX + "methodWriteMapEnd = {0}", WriteMapEnd);
+                }
+
+            }
+
+
+
+
+        }
+        static class DecoderHelper
         {
             private static readonly Logger log;
             public static readonly Type DecoderType;
@@ -241,6 +275,17 @@ namespace Avro
             public Type DictionaryType { get; private set; }
             public ConstructorInfo DictionaryConstructor { get; private set; }
             public MethodInfo DictionaryAdd { get; private set; }
+            public Type IEnumerableType { get; private set; }
+            public Type KeyValuePairType { get; private set; }
+            public Type IEnumeratorType { get; private set; }
+            public MethodInfo IEnumerableGetEnumerator { get; private set; }
+            public MethodInfo IEnumeratorGetCurrent { get; private set; }
+            public MethodInfo IEnumeratorMoveNext { get; private set; }
+            public Type ICollectionType{ get; private set; }
+            public MethodInfo ICollectionGetCount { get; private set; }
+            public MethodInfo KeyValuePairGetKey { get; private set; }
+            public MethodInfo KeyValuePairGetValue { get; private set; }
+
 
 
             public DictionaryHelper(Type arg0, Type arg1)
@@ -248,12 +293,24 @@ namespace Avro
                 const string PREFIX = "ctor(Type, Type) - ";
 
                 if (log.IsDebugEnabled) log.DebugFormat(PREFIX + "arg0 = {0}, arg1 = {1}", arg0, arg1);
-
+                
                 IDictionaryType = TypeHelper.CreateType(typeof(IDictionary<,>), arg0, arg1);
                 DictionaryType = TypeHelper.CreateType(typeof(Dictionary<,>), arg0, arg1);
                 DictionaryConstructor = DictionaryType.GetConstructor(Type.EmptyTypes);
                 DictionaryAdd = IDictionaryType.GetMethod("Add");
+                KeyValuePairType = TypeHelper.CreateType(typeof(KeyValuePair<,>), arg0, arg1);
+                IEnumerableType = TypeHelper.CreateType(typeof(IEnumerable<>), KeyValuePairType);
+                IEnumerableGetEnumerator = IEnumerableType.GetMethod("GetEnumerator");
+                IEnumeratorType = TypeHelper.CreateType(typeof(IEnumerator<>), KeyValuePairType);
+                IEnumeratorGetCurrent = IEnumeratorType.GetMethod("get_Current");
 
+                IEnumeratorMoveNext = typeof(System.Collections.IEnumerator).GetMethod("MoveNext");
+                ICollectionType = TypeHelper.CreateType(typeof(ICollection<>), KeyValuePairType);
+                ICollectionGetCount = ICollectionType.GetMethod("get_Count");
+
+                KeyValuePairGetKey = KeyValuePairType.GetMethod("get_Key");
+                KeyValuePairGetValue = KeyValuePairType.GetMethod("get_Value");
+                
 
                 if (log.IsDebugEnabled)
                 {
@@ -261,12 +318,81 @@ namespace Avro
                     log.DebugFormat("DictionaryType = {0}", DictionaryType);
                     log.DebugFormat("DictionaryConstructor = {0}", DictionaryConstructor);
                     log.DebugFormat("DictionaryAdd = {0}", DictionaryAdd);
+                    log.DebugFormat("KeyValuePairType = {0}", KeyValuePairType);
+                    log.DebugFormat("IEnumerableType = {0}", IEnumerableType);
+                    log.DebugFormat("IEnumerableGetEnumerator = {0}", IEnumerableGetEnumerator);
+                    log.DebugFormat(PREFIX + "IEnumeratorMoveNext = {0}", IEnumeratorMoveNext);
+                    log.DebugFormat(PREFIX + "ICollectionType = {0}", ICollectionType);
+                    log.DebugFormat(PREFIX + "ICollectionGetCount = {0}", ICollectionGetCount);
+
+
+                    log.DebugFormat(PREFIX + "KeyValuePairGetKey = {0}", KeyValuePairGetKey);
+                    log.DebugFormat(PREFIX + "KeyValuePairGetValue = {0}", KeyValuePairGetValue);
+
                 }
             }
 
         }
 
-        private static DynamicMethod generateMapDecoder(MapSchema schema, Type dataType)
+        class EmitHelper
+        {
+            private static readonly Logger log = new Logger();
+
+#if(DEBUG)
+            private AssemblyName _AssemblyName;
+            private AssemblyBuilder _AssemblyBuilder;
+            private ModuleBuilder _ModuleBuilder;
+            private TypeBuilder _TypeBuilder;
+#endif
+
+            public EmitHelper()
+            {
+#if(DEBUG)
+                _AssemblyName = new AssemblyName("TestAssembly");
+                _AssemblyBuilder = AppDomain.CurrentDomain.DefineDynamicAssembly(_AssemblyName, AssemblyBuilderAccess.RunAndSave);
+                _ModuleBuilder = _AssemblyBuilder.DefineDynamicModule(_AssemblyName.Name + ".dll");
+                _TypeBuilder = _ModuleBuilder.DefineType("GenerateEncoderMap.Test");
+#endif
+            }
+
+            public MethodInfo CreateMethod(string name, Type returnType, Type[] args, out ILGenerator il)
+            {
+                const string PREFIX = "CreateMethod(string, Type, Type[], out ILGenerator) - ";
+                if (log.IsDebugEnabled) log.DebugFormat(PREFIX + "Creating method \"{0}\"", name);
+                if (string.IsNullOrEmpty(name)) throw new ArgumentNullException("name", "name cannot be null.");
+
+#if(DEBUG)
+                //MethodBuilder builder = _TypeBuilder.DefineMethod(name, MethodAttributes.Public | MethodAttributes.Static, returnType, args);
+                //il = builder.GetILGenerator();
+                //return builder;
+
+                DynamicMethod method = new DynamicMethod(name, null, args, SerializerType);
+                il = method.GetILGenerator();
+                return method;
+
+#else
+                return new MethodInfo(name, null, args, SerializerType);
+#endif
+            }
+
+
+
+
+
+
+            public void Save()
+            {
+                const string PREFIX = "Save() - ";
+                if (log.IsDebugEnabled) log.DebugFormat(PREFIX + "saving type.");
+                Type type = _TypeBuilder.CreateType();
+                if (log.IsDebugEnabled) log.DebugFormat(PREFIX + "Created type {0}", type);
+            }
+        }
+
+        private static readonly EmitHelper EmitHelperInstance = new EmitHelper();
+
+
+        private static MethodInfo generateMapDecoder(MapSchema schema, Type dataType)
         {
             const string PREFIX = "generateMapDecoder(MapSchema, Type) - ";
             if (log.IsDebugEnabled) log.DebugFormat(PREFIX + "dataType = {0}, schema = {1}", dataType, schema);
@@ -278,16 +404,9 @@ namespace Avro
 
             Type[] args = getDecoderMethodArgs(dictHelper.IDictionaryType);
 
-            if (log.IsDebugEnabled) log.DebugFormat(PREFIX + "creating method {0}", methodName);
-            DynamicMethod method = new DynamicMethod(methodName, null, args, SerializerType);
-            if (log.IsDebugEnabled) log.DebugFormat(PREFIX + "method = {0}", method);
+            ILGenerator il=null;
+            MethodInfo method = EmitHelperInstance.CreateMethod(methodName, null, args, out il);
 
-            
-
-
-
-
-            ILGenerator il = method.GetILGenerator();
             LocalBuilder localLength = il.DeclareLocal(typeof(long));
             LocalBuilder localMap = il.DeclareLocal(dictHelper.IDictionaryType);
             LocalBuilder localIndex = il.DeclareLocal(typeof(long));
@@ -360,12 +479,12 @@ namespace Avro
         }
 
         private static readonly Type EncoderType = typeof(Encoder);
-        
 
 
 
+        private static readonly MethodInfo methodDispose = typeof(IDisposable).GetMethod("Dispose");
 
-        private static DynamicMethod generateMapEncoder(MapSchema schema, Type dataType)
+        private static MethodInfo generateMapEncoder(MapSchema schema, Type dataType)
         {
             const string PREFIX = "generateMapEncoder(MapSchema, Type) - ";
             if (log.IsDebugEnabled) log.DebugFormat(PREFIX + "Generating encode method for {0} schema = {1}", dataType, schema);
@@ -374,6 +493,8 @@ namespace Avro
             {
                 throw new NotSupportedException("Only types based on System.Collections.Generic.IDictionary are supported.");
             }
+
+            DictionaryHelper dictHelper = new DictionaryHelper(typeof(string), typeof(string));
 
             long hashCode = getHashCode(schema, dataType);
             string methodName = string.Format("EncodeMap{0}", hashCode);
@@ -386,68 +507,10 @@ namespace Avro
             Type genericTypeDef = dataType.GetGenericTypeDefinition();
             Type[] args = getEncoderMethodArgs(dataType);
 
-            
-            
-
-            
-            Type keyValuePairType = TypeHelper.CreateType(typeof(KeyValuePair<,>), typeof(string), typeof(string));
-            if (log.IsDebugEnabled) log.DebugFormat(PREFIX + "keyValuePairType = {0}", keyValuePairType);
-            Type ienumerableType = TypeHelper.CreateType(typeof(IEnumerable<>), keyValuePairType);
-            if (log.IsDebugEnabled) log.DebugFormat(PREFIX + "ienumerableType = {0}", ienumerableType);
-            Type enumeratorType = TypeHelper.CreateType(typeof(IEnumerator<>), keyValuePairType);
-            if (log.IsDebugEnabled) log.DebugFormat(PREFIX + "enumeratorType = {0}", enumeratorType);
-            MethodInfo methodGetEnumerator = ienumerableType.GetMethod("GetEnumerator");
-            if (log.IsDebugEnabled) log.DebugFormat(PREFIX + "methodGetEnumerator = {0}", methodGetEnumerator);
-
-
-            MethodInfo methodGetCurrent = enumeratorType.GetMethod("get_Current");
-            if (log.IsDebugEnabled) log.DebugFormat(PREFIX + "get_Current = {0}", methodGetCurrent);
-
-            MethodInfo methodMoveNext = typeof(System.Collections.IEnumerator).GetMethod("MoveNext");
-            if (log.IsDebugEnabled) log.DebugFormat(PREFIX + "methodMoveNext = {0}", methodMoveNext);
-
-            Type icollectionType = TypeHelper.CreateType(typeof(ICollection<>), keyValuePairType);
-            MethodInfo methodGetCount = icollectionType.GetMethod("get_Count");
-            if (log.IsDebugEnabled) log.DebugFormat(PREFIX + "get_Count = {0}", methodGetCount);
-
-            
-
-            MethodInfo methodWriteMapStart = EncoderType.GetMethod("WriteMapStart");
-            if (log.IsDebugEnabled) log.DebugFormat(PREFIX + "WriteMapStart = {0}", methodWriteMapStart);
-            MethodInfo methodSetItemCount = EncoderType.GetMethod("SetItemCount");
-            if (log.IsDebugEnabled) log.DebugFormat(PREFIX + "SetItemCount = {0}", methodSetItemCount);
-            MethodInfo methodStartItem = EncoderType.GetMethod("StartItem");
-            if (log.IsDebugEnabled) log.DebugFormat(PREFIX + "StartItem = {0}", methodStartItem);
-            MethodInfo methodget_Key = keyValuePairType.GetMethod("get_Key");
-            if (log.IsDebugEnabled) log.DebugFormat(PREFIX + "methodget_Key = {0}", methodget_Key);
-            MethodInfo methodget_Value = keyValuePairType.GetMethod("get_Value");
-            if (log.IsDebugEnabled) log.DebugFormat(PREFIX + "methodget_Value = {0}", methodget_Value);
-            MethodInfo methodWriteString = EncoderType.GetMethod("WriteString");
-            if (log.IsDebugEnabled) log.DebugFormat(PREFIX + "methodWriteString = {0}", methodWriteString);
-            MethodInfo methodWriteMapEnd = EncoderType.GetMethod("WriteMapEnd");
-            if (log.IsDebugEnabled) log.DebugFormat(PREFIX + "methodWriteMapEnd = {0}", methodWriteMapEnd);
-
-            MethodInfo methodDispose = typeof(IDisposable).GetMethod("Dispose");
-            if (log.IsDebugEnabled) log.DebugFormat(PREFIX + "methodDispose = {0}", methodDispose);
-
-            //AssemblyName assName = new AssemblyName("TestAssembly");
-
-            //AssemblyBuilder assbuilder = AppDomain.CurrentDomain.DefineDynamicAssembly(assName, AssemblyBuilderAccess.Save);
-            //ModuleBuilder modbuilder = assbuilder.DefineDynamicModule(assName.Name + ".dll");
-            //TypeBuilder typeBuilder = modbuilder.DefineType("GenerateEncoderMap.Test");
-
-            if (log.IsDebugEnabled) log.DebugFormat(PREFIX + "creating method {0}", methodName);
-            DynamicMethod method = new DynamicMethod(methodName, null, args, SerializerType);
-            
-            //MethodBuilder method = typeBuilder.DefineMethod(methodName, MethodAttributes.Public|MethodAttributes.Static,null, args);
-            
-            if (log.IsDebugEnabled) log.DebugFormat(PREFIX + "method = {0}", method);
-            
-            ILGenerator il = method.GetILGenerator();
-            
-            LocalBuilder localEntry = il.DeclareLocal(keyValuePairType);
-            //localEntry.SetLocalSymInfo("entry");
-            LocalBuilder localEnumerator = il.DeclareLocal(enumeratorType);
+            ILGenerator il = null;
+            MethodInfo method = EmitHelperInstance.CreateMethod(methodName, null, args, out il);
+            LocalBuilder localEntry = il.DeclareLocal(dictHelper.KeyValuePairType);
+            LocalBuilder localEnumerator = il.DeclareLocal(dictHelper.IEnumeratorType);
             LocalBuilder localFlag = il.DeclareLocal(typeof(bool));
 
             Label labelGetCurrent = il.DefineLabel();
@@ -458,45 +521,45 @@ namespace Avro
             il.Emit(OpCodes.Nop);
             il.Emit(OpCodes.Ldarg_1);
             il.Emit(OpCodes.Ldarg_0);
-            il.Emit(OpCodes.Callvirt, methodWriteMapStart);
+            il.Emit(OpCodes.Callvirt, EncoderHelper.WriteMapStart);
             il.Emit(OpCodes.Nop);
             il.Emit(OpCodes.Ldarg_1);
             il.Emit(OpCodes.Ldarg_0);
             il.Emit(OpCodes.Ldarg_2);
-            il.Emit(OpCodes.Callvirt, methodGetCount);
-            il.Emit(OpCodes.Callvirt, methodSetItemCount);
+            il.Emit(OpCodes.Callvirt, dictHelper.ICollectionGetCount);
+            il.Emit(OpCodes.Callvirt, EncoderHelper.SetItemCount);
             il.Emit(OpCodes.Nop);
             il.Emit(OpCodes.Nop);
             il.Emit(OpCodes.Ldarg_2);
-            il.Emit(OpCodes.Callvirt, methodGetEnumerator);
+            il.Emit(OpCodes.Callvirt, dictHelper.IEnumerableGetEnumerator);
             il.Emit(OpCodes.Stloc_1);
             Label labelExceptionBlock = il.BeginExceptionBlock();
             il.Emit(OpCodes.Br_S, labelMoveNext);
             il.MarkLabel(labelGetCurrent);
             il.Emit(OpCodes.Ldloc_1);
-            il.Emit(OpCodes.Callvirt, methodGetCurrent);
+            il.Emit(OpCodes.Callvirt, dictHelper.IEnumeratorGetCurrent);
             il.Emit(OpCodes.Stloc_0);
             il.Emit(OpCodes.Nop);
             il.Emit(OpCodes.Ldarg_1);
             il.Emit(OpCodes.Ldarg_0);
-            il.Emit(OpCodes.Callvirt, methodStartItem);
+            il.Emit(OpCodes.Callvirt, EncoderHelper.StartItem);
             il.Emit(OpCodes.Nop);
             il.Emit(OpCodes.Ldarg_1);
             il.Emit(OpCodes.Ldarg_0);
             il.Emit(OpCodes.Ldloca_S, localEntry);
-            il.Emit(OpCodes.Call, methodget_Key);
-            il.Emit(OpCodes.Callvirt, methodWriteString);
+            il.Emit(OpCodes.Call, dictHelper.KeyValuePairGetKey);
+            il.Emit(OpCodes.Callvirt, EncoderHelper.WriteString);
             il.Emit(OpCodes.Nop);
             il.Emit(OpCodes.Ldarg_1);
             il.Emit(OpCodes.Ldarg_0);
             il.Emit(OpCodes.Ldloca_S, localEntry);
-            il.Emit(OpCodes.Call, methodget_Value);
-            il.Emit(OpCodes.Callvirt, methodWriteString);
+            il.Emit(OpCodes.Call, dictHelper.KeyValuePairGetValue);
+            il.Emit(OpCodes.Callvirt, EncoderHelper.WriteString);
             il.Emit(OpCodes.Nop);
             il.Emit(OpCodes.Nop);
             il.MarkLabel(labelMoveNext);
             il.Emit(OpCodes.Ldloc_1);
-            il.Emit(OpCodes.Callvirt, methodMoveNext);
+            il.Emit(OpCodes.Callvirt, dictHelper.IEnumeratorMoveNext);
             il.Emit(OpCodes.Stloc_2);
             il.Emit(OpCodes.Ldloc_2);
             il.Emit(OpCodes.Brtrue_S, labelGetCurrent);
@@ -522,7 +585,7 @@ namespace Avro
 
             il.Emit(OpCodes.Ldarg_1);
             il.Emit(OpCodes.Ldarg_0);
-            il.Emit(OpCodes.Callvirt, methodWriteMapEnd);
+            il.Emit(OpCodes.Callvirt, EncoderHelper.WriteMapEnd);
             il.Emit(OpCodes.Nop);
             il.Emit(OpCodes.Ret);
 
@@ -558,10 +621,8 @@ namespace Avro
             }
 
             if (log.IsDebugEnabled) log.DebugFormat(PREFIX + "using decoder method of {0}", decoderMethodToCall);
-
-            DynamicMethod method = new DynamicMethod(methodName, dataType, args, SerializerType);
-            
-            ILGenerator il = method.GetILGenerator();
+            ILGenerator il = null;
+            MethodInfo method = EmitHelperInstance.CreateMethod(methodName, dataType, args, out il);
             LocalBuilder builder = il.DeclareLocal(dataType);
             il.Emit(OpCodes.Nop);
             il.Emit(OpCodes.Ldarg_1);
@@ -577,7 +638,7 @@ namespace Avro
 
 
 
-        private static DynamicMethod generatePrimitiveEncoder(Type dataType)
+        private static MethodInfo generatePrimitiveEncoder(Type dataType)
         {
             const string PREFIX = "generatePrimitiveEncoder(Type) - ";
             if (log.IsDebugEnabled) log.DebugFormat(PREFIX + "Generating encode method for {0}", dataType);
@@ -592,8 +653,9 @@ namespace Avro
                 throw new NotSupportedException("Type of " + dataType + " is not supported.");
             }
             if (log.IsDebugEnabled) log.DebugFormat(PREFIX + "using encoder method of {0}", encoderMethodToCall);
-            DynamicMethod method = new DynamicMethod(methodName, null, args, SerializerType);
-            ILGenerator il = method.GetILGenerator();
+            ILGenerator il = null;
+            MethodInfo method = EmitHelperInstance.CreateMethod(methodName, null, args, out il);
+            
             il.Emit(OpCodes.Nop);
             il.Emit(OpCodes.Ldarg_1);
             il.Emit(OpCodes.Ldarg_0);
@@ -613,7 +675,7 @@ namespace Avro
 
 
 
-            MethodInfo proxy = getDynamicMethod(MethodType.Encoder, schema, dataType);
+            MethodInfo proxy = getMethodInfo(MethodType.Encoder, schema, dataType);
             proxy.Invoke(null, new object[]{iostr, encoder, data});
         }
 
@@ -678,7 +740,7 @@ namespace Avro
 
             return TestDecodeMap(iostr, decoder);
 
-            MethodInfo proxy = getDynamicMethod(MethodType.Decoder, schema, type);
+            MethodInfo proxy = getMethodInfo(MethodType.Decoder, schema, type);
             return proxy.Invoke(null, new object[] { iostr, decoder });
         }
     }

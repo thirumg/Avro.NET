@@ -42,6 +42,8 @@
       <HintPath>..\contrib\Json35r6\Bin\DotNet20\Newtonsoft.Json.Net20.dll</HintPath>
     </Reference>
     <Reference Include="System" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="ArrayHelper.cs" />
@@ -57,6 +59,7 @@
     <Compile Include="DataFileWriter.cs" />
     <Compile Include="DatumReader.cs" />
     <Compile Include="DatumWriter.cs" />
+    <Compile Include="FieldAttribute.cs" />
     <Compile Include="IO\Decoder.cs" />
     <Compile Include="IO\Encoder.cs" />
     <Compile Include="EnumSchema.cs" />

@@ -15,7 +15,7 @@ namespace Avro.Test
         }
 
         Random random = new Random();
-        const int ITERATIONS = 10000;
+        const int ITERATIONS = 100;
         [TestCase]
         public void IntTests()
         {
