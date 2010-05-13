@@ -93,8 +93,19 @@ namespace Avro.Test
             {
                 Serializer.Serialize(PrefixStyle.None, mapSchema, iostr, encoder, expected);
                 iostr.Position = 0;
+                Assert.Greater(iostr.Length, 0, "Serialized length should be greater than 0.");
                 IDictionary<string, string> actual = Serializer.Deserialize < IDictionary<string, string>>(PrefixStyle.None, mapSchema, iostr, decoder);
-                Assert.AreEqual(expected, actual);
+                Assert.NotNull(actual, "actual should not be null");
+                Assert.Greater(actual.Count, 0, "Deserialized Length should be greater than 0.");
+                Assert.AreEqual(expected.Count, actual.Count, "expect and actual should == {0}", actual.Count);
+
+                foreach (KeyValuePair<string, string> expectedEntry in expected)
+                {
+                    Assert.IsTrue(actual.ContainsKey(expectedEntry.Key), "actual does not contain key \"{0}\"", expectedEntry.Key);
+                    string actualValue = actual[expectedEntry.Key];
+                    Assert.IsNotNullOrEmpty(actualValue, "value for key \"{0}\" is null or empty.", expectedEntry.Key);
+                    Assert.AreEqual(expectedEntry.Value, actualValue, "Value for key \"{0}\" did not match", expectedEntry.Key); 
+                }
             }
             
 
