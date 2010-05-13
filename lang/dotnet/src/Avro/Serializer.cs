@@ -1,4 +1,6 @@
-﻿using System;
+﻿//#define TESTSERIALIZATION
+
+using System;
 using System.Collections.Generic;
 using System.IO;
 using Avro.IO;
@@ -248,19 +250,19 @@ namespace Avro
         {
             static readonly Logger log = new Logger();
 
-            public static Type CreateType(Type genericType, params Type[] args)
+            public static Type CreateGenericType(Type genericType, params Type[] args)
             {
-                const string PREFIX = "CreateType(Type, Type[]) - ";
+                const string PREFIX = "CreateGenericType(Type, Type[]) - ";
                 if (log.IsDebugEnabled)
                 {
                     log.DebugFormat(PREFIX + "genericType = {0}", genericType);
                     int index = 0;
                     foreach (Type arg in args)
-                        log.DebugFormat("arg{0} = {1}", index++, arg);
+                        log.DebugFormat(PREFIX + "arg{0} = {1}", index++, arg);
                 }
 
                 Type returnType = genericType.MakeGenericType(args);
-                if (log.IsDebugEnabled) log.DebugFormat("returnType = {0}", returnType);
+                if (log.IsDebugEnabled) log.DebugFormat(PREFIX + "returnType = {0}", returnType);
                 return returnType;
             }
 
@@ -294,18 +296,18 @@ namespace Avro
 
                 if (log.IsDebugEnabled) log.DebugFormat(PREFIX + "arg0 = {0}, arg1 = {1}", arg0, arg1);
                 
-                IDictionaryType = TypeHelper.CreateType(typeof(IDictionary<,>), arg0, arg1);
-                DictionaryType = TypeHelper.CreateType(typeof(Dictionary<,>), arg0, arg1);
+                IDictionaryType = TypeHelper.CreateGenericType(typeof(IDictionary<,>), arg0, arg1);
+                DictionaryType = TypeHelper.CreateGenericType(typeof(Dictionary<,>), arg0, arg1);
                 DictionaryConstructor = DictionaryType.GetConstructor(Type.EmptyTypes);
                 DictionaryAdd = IDictionaryType.GetMethod("Add");
-                KeyValuePairType = TypeHelper.CreateType(typeof(KeyValuePair<,>), arg0, arg1);
-                IEnumerableType = TypeHelper.CreateType(typeof(IEnumerable<>), KeyValuePairType);
+                KeyValuePairType = TypeHelper.CreateGenericType(typeof(KeyValuePair<,>), arg0, arg1);
+                IEnumerableType = TypeHelper.CreateGenericType(typeof(IEnumerable<>), KeyValuePairType);
                 IEnumerableGetEnumerator = IEnumerableType.GetMethod("GetEnumerator");
-                IEnumeratorType = TypeHelper.CreateType(typeof(IEnumerator<>), KeyValuePairType);
+                IEnumeratorType = TypeHelper.CreateGenericType(typeof(IEnumerator<>), KeyValuePairType);
                 IEnumeratorGetCurrent = IEnumeratorType.GetMethod("get_Current");
 
                 IEnumeratorMoveNext = typeof(System.Collections.IEnumerator).GetMethod("MoveNext");
-                ICollectionType = TypeHelper.CreateType(typeof(ICollection<>), KeyValuePairType);
+                ICollectionType = TypeHelper.CreateGenericType(typeof(ICollection<>), KeyValuePairType);
                 ICollectionGetCount = ICollectionType.GetMethod("get_Count");
 
                 KeyValuePairGetKey = KeyValuePairType.GetMethod("get_Key");
@@ -314,21 +316,20 @@ namespace Avro
 
                 if (log.IsDebugEnabled)
                 {
-                    log.DebugFormat("IDictionaryType = {0}", IDictionaryType);
-                    log.DebugFormat("DictionaryType = {0}", DictionaryType);
-                    log.DebugFormat("DictionaryConstructor = {0}", DictionaryConstructor);
-                    log.DebugFormat("DictionaryAdd = {0}", DictionaryAdd);
-                    log.DebugFormat("KeyValuePairType = {0}", KeyValuePairType);
-                    log.DebugFormat("IEnumerableType = {0}", IEnumerableType);
-                    log.DebugFormat("IEnumerableGetEnumerator = {0}", IEnumerableGetEnumerator);
+
+                    log.DebugFormat(PREFIX + "IDictionaryType = {0}", IDictionaryType);
+                    log.DebugFormat(PREFIX + "DictionaryType = {0}", DictionaryType);
+                    log.DebugFormat(PREFIX + "DictionaryConstructor = {0}", DictionaryConstructor);
+                    log.DebugFormat(PREFIX + "DictionaryAdd = {0}", DictionaryAdd);
+                    log.DebugFormat(PREFIX + "KeyValuePairType = {0}", KeyValuePairType);
+                    log.DebugFormat(PREFIX + "IEnumerableType = {0}", IEnumerableType);
+                    log.DebugFormat(PREFIX + "IEnumerableGetEnumerator = {0}", IEnumerableGetEnumerator);
                     log.DebugFormat(PREFIX + "IEnumeratorMoveNext = {0}", IEnumeratorMoveNext);
                     log.DebugFormat(PREFIX + "ICollectionType = {0}", ICollectionType);
                     log.DebugFormat(PREFIX + "ICollectionGetCount = {0}", ICollectionGetCount);
-
-
                     log.DebugFormat(PREFIX + "KeyValuePairGetKey = {0}", KeyValuePairGetKey);
                     log.DebugFormat(PREFIX + "KeyValuePairGetValue = {0}", KeyValuePairGetValue);
-
+                    
                 }
             }
 
@@ -358,21 +359,31 @@ namespace Avro
             public MethodInfo CreateMethod(string name, Type returnType, Type[] args, out ILGenerator il)
             {
                 const string PREFIX = "CreateMethod(string, Type, Type[], out ILGenerator) - ";
+                if (log.IsDebugEnabled)
+                {
+                    log.DebugFormat(PREFIX + "name = \"{0}\" returnType = \"{0}\"", name, returnType);
+                    int index=0;
+                    foreach (Type arg in args)
+                        log.DebugFormat("arg{0} == {1}", index++, arg);
+                }
+
+
                 if (log.IsDebugEnabled) log.DebugFormat(PREFIX + "Creating method \"{0}\"", name);
                 if (string.IsNullOrEmpty(name)) throw new ArgumentNullException("name", "name cannot be null.");
 
-#if(DEBUG)
-                //MethodBuilder builder = _TypeBuilder.DefineMethod(name, MethodAttributes.Public | MethodAttributes.Static, returnType, args);
-                //il = builder.GetILGenerator();
-                //return builder;
+                MethodInfo method = null;
 
-                DynamicMethod method = new DynamicMethod(name, null, args, SerializerType);
-                il = method.GetILGenerator();
-                return method;
-
+#if(TESTSERIALIZATION)
+                MethodBuilder builder = _TypeBuilder.DefineMethod(name, MethodAttributes.Public | MethodAttributes.Static, returnType, args);
+                il = builder.GetILGenerator();
+                method = builder;
 #else
-                return new MethodInfo(name, null, args, SerializerType);
+                DynamicMethod dmethod = new DynamicMethod(name, returnType, args, SerializerType);
+                il = dmethod.GetILGenerator();
+                method = dmethod;
 #endif
+                if (log.IsDebugEnabled) log.DebugFormat(PREFIX + "returning method {0}", method);
+                return method;
             }
 
 
@@ -382,10 +393,14 @@ namespace Avro
 
             public void Save()
             {
+#if(TESTSERIALIZATION)
                 const string PREFIX = "Save() - ";
                 if (log.IsDebugEnabled) log.DebugFormat(PREFIX + "saving type.");
                 Type type = _TypeBuilder.CreateType();
                 if (log.IsDebugEnabled) log.DebugFormat(PREFIX + "Created type {0}", type);
+
+                _AssemblyBuilder.Save(_AssemblyName.Name + ".dll");
+#endif
             }
         }
 
@@ -405,12 +420,12 @@ namespace Avro
             Type[] args = getDecoderMethodArgs(dictHelper.IDictionaryType);
 
             ILGenerator il=null;
-            MethodInfo method = EmitHelperInstance.CreateMethod(methodName, null, args, out il);
+            MethodInfo method = EmitHelperInstance.CreateMethod(methodName, dictHelper.IDictionaryType, args, out il);
 
             LocalBuilder localLength = il.DeclareLocal(typeof(long));
             LocalBuilder localMap = il.DeclareLocal(dictHelper.IDictionaryType);
             LocalBuilder localIndex = il.DeclareLocal(typeof(long));
-            LocalBuilder localTest = il.DeclareLocal(dictHelper.IDictionaryType);
+            //LocalBuilder localTest = il.DeclareLocal(dictHelper.IDictionaryType);
             LocalBuilder localFlag = il.DeclareLocal(typeof(bool));
             Label L_0030 = il.DefineLabel();
             Label L_0014 = il.DefineLabel();
@@ -451,12 +466,14 @@ namespace Avro
             il.Emit(OpCodes.Stloc_S, localFlag);
             il.Emit(OpCodes.Ldloc_S, localFlag);
             il.Emit(OpCodes.Brtrue_S, L_0014);
-            il.Emit(OpCodes.Ldloc_1);
-            il.Emit(OpCodes.Stloc_3);
+            //il.Emit(OpCodes.Ldloc_1);
+            //il.Emit(OpCodes.Stloc_3);
             il.Emit(OpCodes.Br_S, L_003e);
             il.MarkLabel(L_003e);
-            il.Emit(OpCodes.Ldloc_3);
+            il.Emit(OpCodes.Ldloc_1);
             il.Emit(OpCodes.Ret);
+
+            EmitHelperInstance.Save();
 
             return method;
         }
@@ -589,6 +606,9 @@ namespace Avro
             il.Emit(OpCodes.Nop);
             il.Emit(OpCodes.Ret);
 
+            
+
+
             //Type type = typeBuilder.TypeHelper.createType();
             //assbuilder.Save(assName.Name + ".dll");
 
@@ -673,14 +693,9 @@ namespace Avro
             if (null == iostr) throw new ArgumentNullException("iostr", "iostr cannot be null.");
             Type dataType = data.GetType();
 
-
-
             MethodInfo proxy = getMethodInfo(MethodType.Encoder, schema, dataType);
             proxy.Invoke(null, new object[]{iostr, encoder, data});
         }
-
-        //static readonly Type[] SerializeArgs = new Type[] { typeof(Stream), typeof(Encoder), typeof(object) };
-       
 
         public static void TestEncodeString(Stream iostr, Encoder encoder, string data)
         {
@@ -690,15 +705,6 @@ namespace Avro
         {
             return decoder.ReadString(iostr);
         }
-
-        static void encodeMap<T>(Stream iostr, Encoder encoder, IDictionary<string, T> data)
-        {
-
-
-
-        }
-
-
 
         public static void TestEncodeMap(Stream iostr, Encoder encoder, IDictionary<string, string> data)
         {
@@ -738,18 +744,13 @@ namespace Avro
             if (null == schema) throw new ArgumentNullException("schema", "schema cannot be null.");
             if (null == iostr) throw new ArgumentNullException("iostr", "iostr cannot be null.");
 
-            return TestDecodeMap(iostr, decoder);
+            //return TestDecodeMap(iostr, decoder);
 
             MethodInfo proxy = getMethodInfo(MethodType.Decoder, schema, type);
-            return proxy.Invoke(null, new object[] { iostr, decoder });
+            
+            object value = proxy.Invoke(null, new object[] { iostr, decoder });
+
+            return value;
         }
-    }
-
-    
-
-    abstract class SerializerProxy
-    {
-        public abstract void Serialize(Stream iostr, Encoder encoder, object data);
-        public abstract object Deserialize(Stream iostr, Decoder decoder);
     }
 }

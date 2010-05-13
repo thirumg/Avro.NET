@@ -15,7 +15,7 @@ namespace Avro.Test
         }
 
         Random random = new Random();
-        const int ITERATIONS = 100;
+        const int ITERATIONS = 10000;
         [TestCase]
         public void IntTests()
         {
@@ -89,8 +89,11 @@ namespace Avro.Test
             Schema valueSchema = new PrimitiveSchema("string");
             MapSchema mapSchema = new MapSchema(valueSchema);
 
+            System.Diagnostics.Stopwatch watch = System.Diagnostics.Stopwatch.StartNew();
+
             using (MemoryStream iostr = new MemoryStream())
             {
+                //IDictionary<string, string> actual = Serializer.Deserialize<IDictionary<string, string>>(PrefixStyle.None, mapSchema, iostr, decoder);
                 Serializer.Serialize(PrefixStyle.None, mapSchema, iostr, encoder, expected);
                 iostr.Position = 0;
                 Assert.Greater(iostr.Length, 0, "Serialized length should be greater than 0.");
@@ -107,7 +110,10 @@ namespace Avro.Test
                     Assert.AreEqual(expectedEntry.Value, actualValue, "Value for key \"{0}\" did not match", expectedEntry.Key); 
                 }
             }
-            
+
+            watch.Stop();
+
+
 
 
 
