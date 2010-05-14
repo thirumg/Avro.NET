@@ -10,6 +10,9 @@ namespace Avro
     /// </summary>
     public class BinaryDecoder:Decoder
     {
+        public static readonly BinaryDecoder Instance = new BinaryDecoder();
+        
+
         //def read(self, n):
         //  """
         //  Read n bytes.

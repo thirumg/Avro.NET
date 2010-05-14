@@ -4,7 +4,9 @@ using System.Text;
 
 namespace Avro
 {
-    //TODO: This is not properly generating a schema
+    /// <summary>
+    /// 
+    /// </summary>
     public class MapSchema:Schema
     {
         public Schema ValueSchema { get; private set; }
@@ -13,6 +15,12 @@ namespace Avro
         {
             if (null == valueSchema) throw new ArgumentNullException("valueSchema", "valueSchema cannot be null.");
             this.ValueSchema = valueSchema;
+        }
+
+        protected override void WriteProperties(Newtonsoft.Json.JsonTextWriter writer)
+        {
+            writer.WritePropertyName("values");
+            ValueSchema.writeJson(writer);
         }
     }
 }

@@ -80,6 +80,7 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Protocol.cs" />
     <Compile Include="ProtocolParseException.cs" />
+    <Compile Include="RecordAttribute.cs" />
     <Compile Include="RecordSchema.cs" />
     <Compile Include="RPC\RPCClient.cs" />
     <Compile Include="Schema.cs" />

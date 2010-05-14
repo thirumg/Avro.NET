@@ -20,58 +20,56 @@ namespace Avro.Test
         public void IntTests()
         {
             PrimitiveSchema schema = new PrimitiveSchema("int");
-            Encoder encoder = new BinaryEncoder();
-            Decoder decoder = new BinaryDecoder();
+            
+            
             object[] data = new object[ITERATIONS];
             for (int i = 0; i < ITERATIONS; i++)
             {
                 data[i] = random.Next();
             }
 
-            TestData(schema, encoder, decoder, data);
+            TestData(schema, BinaryEncoder.Instance, BinaryDecoder.Instance, data);
         }
         [TestCase]
         public void LongTests()
         {
             PrimitiveSchema schema = new PrimitiveSchema("long");
-            Encoder encoder = new BinaryEncoder();
-            Decoder decoder = new BinaryDecoder();
+
             object[] data = new object[ITERATIONS];
             for (int i = 0; i < ITERATIONS; i++)
             {
                 data[i] = (long)random.Next();
             }
 
-            TestData(schema, encoder, decoder, data);
+            TestData(schema, BinaryEncoder.Instance, BinaryDecoder.Instance, data);
         }
         [TestCase]
         public void BooleanTests()
         {
             PrimitiveSchema schema = new PrimitiveSchema("boolean");
-            Encoder encoder = new BinaryEncoder();
-            Decoder decoder = new BinaryDecoder();
+
             object[] data = new object[ITERATIONS];
             for (int i = 0; i < ITERATIONS; i++)
             {
                 data[i] = random.Next() % 2==1;
             }
 
-            TestData(schema, encoder, decoder, data);
+            TestData(schema, BinaryEncoder.Instance, BinaryDecoder.Instance, data);
         }
 
         [TestCase]
         public void StringTests()
         {
             PrimitiveSchema schema = new PrimitiveSchema("string");
-            Encoder encoder = new BinaryEncoder();
-            Decoder decoder = new BinaryDecoder();
+            
+            
             object[] data = new object[ITERATIONS];
             for (int i = 0; i < ITERATIONS; i++)
             {
                 data[i] = RandomDataHelper.GetString(1, 5000);
             }
 
-            TestData(schema, encoder, decoder, data);
+            TestData(schema, BinaryEncoder.Instance, BinaryDecoder.Instance, data);
         }
 
         const string MAPTESTING="Map Serialization";
@@ -81,8 +79,7 @@ namespace Avro.Test
         public void MapTests_Bool()
         {
             Dictionary<string, bool> expected = new Dictionary<string, bool>();
-            Encoder encoder = new BinaryEncoder();
-            Decoder decoder = new BinaryDecoder();
+
             for (int i = 0; i < ITERATIONS; i++)
             {
                 string key = string.Format("Key{0:########0}", i);
@@ -95,10 +92,10 @@ namespace Avro.Test
 
             using (MemoryStream iostr = new MemoryStream())
             {
-                Serializer.Serialize(PrefixStyle.None, mapSchema, iostr, encoder, expected);
+                Serializer.Serialize(PrefixStyle.None, mapSchema, iostr, BinaryEncoder.Instance, expected);
                 iostr.Position = 0;
                 Assert.Greater(iostr.Length, 0, "Serialized length should be greater than 0.");
-                IDictionary<string, bool> actual = Serializer.Deserialize<IDictionary<string, bool>>(PrefixStyle.None, mapSchema, iostr, decoder);
+                IDictionary<string, bool> actual = Serializer.Deserialize<IDictionary<string, bool>>(PrefixStyle.None, mapSchema, iostr, BinaryDecoder.Instance);
                 Assert.NotNull(actual, "actual should not be null");
                 Assert.Greater(actual.Count, 0, "Deserialized Length should be greater than 0.");
                 Assert.AreEqual(expected.Count, actual.Count, "expect and actual should == {0}", actual.Count);
@@ -116,8 +113,7 @@ namespace Avro.Test
         public void MapTests_Int()
         {
             Dictionary<string, int> expected = new Dictionary<string, int>();
-            Encoder encoder = new BinaryEncoder();
-            Decoder decoder = new BinaryDecoder();
+
             for (int i = 0; i < ITERATIONS; i++)
             {
                 string key = string.Format("Key{0:########0}", i);
@@ -130,10 +126,10 @@ namespace Avro.Test
 
             using (MemoryStream iostr = new MemoryStream())
             {
-                Serializer.Serialize(PrefixStyle.None, mapSchema, iostr, encoder, expected);
+                Serializer.Serialize(PrefixStyle.None, mapSchema, iostr, BinaryEncoder.Instance, expected);
                 iostr.Position = 0;
                 Assert.Greater(iostr.Length, 0, "Serialized length should be greater than 0.");
-                IDictionary<string, int> actual = Serializer.Deserialize<IDictionary<string, int>>(PrefixStyle.None, mapSchema, iostr, decoder);
+                IDictionary<string, int> actual = Serializer.Deserialize<IDictionary<string, int>>(PrefixStyle.None, mapSchema, iostr, BinaryDecoder.Instance);
                 Assert.NotNull(actual, "actual should not be null");
                 Assert.Greater(actual.Count, 0, "Deserialized Length should be greater than 0.");
                 Assert.AreEqual(expected.Count, actual.Count, "expect and actual should == {0}", actual.Count);
@@ -151,8 +147,7 @@ namespace Avro.Test
         public void MapTests_Long()
         {
             Dictionary<string, long> expected = new Dictionary<string, long>();
-            Encoder encoder = new BinaryEncoder();
-            Decoder decoder = new BinaryDecoder();
+
             for (int i = 0; i < ITERATIONS; i++)
             {
                 string key = string.Format("Key{0:########0}", i);
@@ -165,10 +160,10 @@ namespace Avro.Test
 
             using (MemoryStream iostr = new MemoryStream())
             {
-                Serializer.Serialize(PrefixStyle.None, mapSchema, iostr, encoder, expected);
+                Serializer.Serialize(PrefixStyle.None, mapSchema, iostr, BinaryEncoder.Instance, expected);
                 iostr.Position = 0;
                 Assert.Greater(iostr.Length, 0, "Serialized length should be greater than 0.");
-                IDictionary<string, long> actual = Serializer.Deserialize<IDictionary<string, long>>(PrefixStyle.None, mapSchema, iostr, decoder);
+                IDictionary<string, long> actual = Serializer.Deserialize<IDictionary<string, long>>(PrefixStyle.None, mapSchema, iostr, BinaryDecoder.Instance);
                 Assert.NotNull(actual, "actual should not be null");
                 Assert.Greater(actual.Count, 0, "Deserialized Length should be greater than 0.");
                 Assert.AreEqual(expected.Count, actual.Count, "expect and actual should == {0}", actual.Count);
@@ -186,8 +181,7 @@ namespace Avro.Test
         public void MapTests_Float()
         {
             Dictionary<string, float> expected = new Dictionary<string, float>();
-            Encoder encoder = new BinaryEncoder();
-            Decoder decoder = new BinaryDecoder();
+
             for (int i = 0; i < ITERATIONS; i++)
             {
                 string key = string.Format("Key{0:########0}", i);
@@ -200,10 +194,10 @@ namespace Avro.Test
 
             using (MemoryStream iostr = new MemoryStream())
             {
-                Serializer.Serialize(PrefixStyle.None, mapSchema, iostr, encoder, expected);
+                Serializer.Serialize(PrefixStyle.None, mapSchema, iostr, BinaryEncoder.Instance, expected);
                 iostr.Position = 0;
                 Assert.Greater(iostr.Length, 0, "Serialized length should be greater than 0.");
-                IDictionary<string, float> actual = Serializer.Deserialize<IDictionary<string, float>>(PrefixStyle.None, mapSchema, iostr, decoder);
+                IDictionary<string, float> actual = Serializer.Deserialize<IDictionary<string, float>>(PrefixStyle.None, mapSchema, iostr, BinaryDecoder.Instance);
                 Assert.NotNull(actual, "actual should not be null");
                 Assert.Greater(actual.Count, 0, "Deserialized Length should be greater than 0.");
                 Assert.AreEqual(expected.Count, actual.Count, "expect and actual should == {0}", actual.Count);
@@ -216,6 +210,34 @@ namespace Avro.Test
                 }
             }
         }
+        [TestCase]
+        public void RecordTest_Simple()
+        {
+            RecordTest expected = new RecordTest();
+            expected.Test = "This is a test value";
+
+            RecordSchema schema = new RecordSchema(new Name("RecordTest", null));
+            Field testField = new Field(new PrimitiveSchema("string"), "Test", false);
+            schema.AddField(testField);
+
+            
+
+            using (MemoryStream iostr = new MemoryStream())
+            {
+                Serializer.Serialize(PrefixStyle.None, schema, iostr, BinaryEncoder.Instance, expected);
+
+            }
+
+
+        }
+
+        [Record]
+        public class RecordTest
+        {
+            [Field]
+            public string Test { get; set; }
+        }
+
 
 
 
@@ -224,8 +246,7 @@ namespace Avro.Test
         public void MapTests_String()
         {
             Dictionary<string, string> expected = new Dictionary<string, string>();
-            Encoder encoder = new BinaryEncoder();
-            Decoder decoder = new BinaryDecoder();
+
             for (int i = 0; i < ITERATIONS; i++)
             {
                 string key = string.Format("Key{0:########0}", i);
@@ -238,10 +259,10 @@ namespace Avro.Test
 
             using (MemoryStream iostr = new MemoryStream())
             {
-                Serializer.Serialize(PrefixStyle.None, mapSchema, iostr, encoder, expected);
+                Serializer.Serialize(PrefixStyle.None, mapSchema, iostr, BinaryEncoder.Instance, expected);
                 iostr.Position = 0;
                 Assert.Greater(iostr.Length, 0, "Serialized length should be greater than 0.");
-                IDictionary<string, string> actual = Serializer.Deserialize < IDictionary<string, string>>(PrefixStyle.None, mapSchema, iostr, decoder);
+                IDictionary<string, string> actual = Serializer.Deserialize<IDictionary<string, string>>(PrefixStyle.None, mapSchema, iostr, BinaryDecoder.Instance);
                 Assert.NotNull(actual, "actual should not be null");
                 Assert.Greater(actual.Count, 0, "Deserialized Length should be greater than 0.");
                 Assert.AreEqual(expected.Count, actual.Count, "expect and actual should == {0}", actual.Count);

@@ -1,8 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Text;
 using System.IO;
 using System.IO.Compression;
+using Avro.IO;
+
 
 namespace Avro
 {
@@ -11,7 +12,7 @@ namespace Avro
 
         public Schema Schema { get; private set; }
         private Stream stream;
-        private BinaryDecoder _Decoder;
+        private Decoder _Decoder;
         private Dictionary<string, byte[]> _metadata = new Dictionary<string, byte[]>();
         private byte[] _Sync = new byte[DataFileConstants.SYNC_SIZE];
         private DatumReader<T> _Reader;
@@ -27,7 +28,7 @@ namespace Avro
         private void init(Stream input)
         {
             //TODO: Should this be a buffered stream?
-            this._Decoder = new BinaryDecoder();
+            this._Decoder = BinaryDecoder.Instance;
             byte[] magic = new byte[DataFileConstants.MAGIC.Length];
             try
             {

@@ -9,6 +9,12 @@ namespace Avro
         public IList<Field> Fields { get; set; }
         private IDictionary<string, Field> _fieldLookup;
 
+        public RecordSchema(Name name)
+            : this(Schema.RECORD, name, null, null)
+        {
+
+        }
+
         public RecordSchema(Name name, IEnumerable<Field> fields, Names names):this(Schema.RECORD,name, fields, names)
         {
 

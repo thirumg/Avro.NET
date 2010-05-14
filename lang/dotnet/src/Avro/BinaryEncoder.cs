@@ -11,14 +11,13 @@ namespace Avro
     /// </summary>
     public class BinaryEncoder : Encoder
     {
+        public static readonly BinaryEncoder Instance = new BinaryEncoder();
+
         /// <summary>
         /// Write leaf values.
         /// </summary>
 
-        public BinaryEncoder()
-        {
 
-        }
 
         private void write(Stream Stream, params byte[] bytes)
         {

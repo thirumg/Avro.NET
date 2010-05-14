@@ -168,16 +168,74 @@ namespace Avro
                 else
                     return generateArrayDecoder((ArraySchema)schema, dataType);
             }
+            else if (schema is RecordSchema)
+            {
+                if (MethodType.Encoder == methodType)
+                    return generateRecordEncoder((RecordSchema)schema, dataType);
+                else
+                    return generateRecordDecoder((RecordSchema)schema, dataType);
+            }
             throw new NotSupportedException("Schema of type " + schema.Type + " is not supported yet.");
         }
 
-        private static MethodInfo generateArrayDecoder(ArraySchema arraySchema, Type dataType)
+        private static MethodInfo generateRecordDecoder(RecordSchema schema, Type dataType)
+        {
+            throw new NotImplementedException();
+        }
+
+        private static readonly Type FieldAttributeType = typeof(FieldAttribute);
+
+        class PropertyHelper
+        {
+            public PropertyInfo Property { get; set; }
+            public FieldAttribute FieldAttribute { get; set; }
+            public string Name { get; set; }
+        }
+
+        private static MethodInfo generateRecordEncoder(RecordSchema schema, Type dataType)
+        {
+            const string PREFIX = "generateRecordEncoder(RecordSchema, Type) - ";
+
+            PropertyInfo[] properties = dataType.GetProperties();
+
+
+
+            foreach (PropertyInfo property in properties)
+            {
+                if (log.IsDebugEnabled) log.DebugFormat(PREFIX + "checking property \"{0}\"", property.Name);
+
+                FieldAttribute[] attributes = property.GetCustomAttributes(FieldAttributeType, true) as FieldAttribute[];
+                if (attributes.Length == 0)
+                {
+                    if (log.IsDebugEnabled) log.DebugFormat(PREFIX + "No attributes defined for \"{0}\"", property.Name);
+                    continue;
+                }
+
+                FieldAttribute attribute = attributes[0];
+
+                if (string.IsNullOrEmpty(attribute.Name))
+                {
+
+
+                }
+
+
+            }
+
+
+
+
+
+                throw new NotImplementedException();
+        }
+
+        private static MethodInfo generateArrayDecoder(ArraySchema schema, Type dataType)
         {
 
             throw new NotImplementedException();
         }
 
-        private static MethodInfo generateArrayEncoder(ArraySchema arraySchema, Type dataType)
+        private static MethodInfo generateArrayEncoder(ArraySchema schema, Type dataType)
         {
             if (!dataType.IsArray)
                 throw new NotSupportedException();

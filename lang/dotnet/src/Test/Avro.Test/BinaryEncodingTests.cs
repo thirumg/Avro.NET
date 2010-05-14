@@ -21,12 +21,12 @@ namespace Avro.Test
             {
                 int expectedValue = random.Next();
                 MemoryStream iostr = new MemoryStream();
-                BinaryEncoder encoder = new BinaryEncoder();
-                encoder.WriteInt(iostr, expectedValue);
+                
+                BinaryEncoder.Instance.WriteInt(iostr, expectedValue);
                 iostr.Flush();
                 iostr.Position = 0;
-                BinaryDecoder decoder = new BinaryDecoder();
-                int actual = decoder.ReadInt(iostr);
+
+                int actual = BinaryDecoder.Instance.ReadInt(iostr);
                 Assert.AreEqual(expectedValue, actual, "Iteration {0:###,###,###,##0}", i);
             }
         }
@@ -40,13 +40,12 @@ namespace Avro.Test
             {
                 long expectedValue = random.Next();
                 MemoryStream iostr = new MemoryStream();
-                BinaryEncoder encoder = new BinaryEncoder();
-                encoder.WriteLong(iostr, expectedValue);
+                
+                BinaryEncoder.Instance.WriteLong(iostr, expectedValue);
                 iostr.Flush();
                 iostr.Position = 0;
 
-                BinaryDecoder decoder = new BinaryDecoder();
-                long actual = decoder.ReadLong(iostr);
+                long actual = BinaryDecoder.Instance.ReadLong(iostr);
                 Assert.AreEqual(expectedValue, actual, "Iteration {0:###,###,###,##0}", i);
             }
         }
@@ -63,14 +62,14 @@ namespace Avro.Test
 
                 string expectedValue = Convert.ToBase64String(buffers);
                 MemoryStream iostr = new MemoryStream();
-                BinaryEncoder encoder = new BinaryEncoder();
-                encoder.WriteString(iostr, expectedValue);
+
+                BinaryEncoder.Instance.WriteString(iostr, expectedValue);
 
 
                 iostr.Position = 0;
-                BinaryDecoder decoder = new BinaryDecoder();
+                
 
-                string actual = decoder.ReadString(iostr);
+                string actual = BinaryDecoder.Instance.ReadString(iostr);
                 Assert.AreEqual(expectedValue, actual, "Iteration {0:###,###,###,##0}", i);
             }
         }
@@ -83,12 +82,12 @@ namespace Avro.Test
             {
                 bool expectedValue = random.Next() % 2 ==0;
                 MemoryStream iostr = new MemoryStream();
-                BinaryEncoder encoder = new BinaryEncoder();
-                encoder.WriteBoolean(iostr, expectedValue);
+                
+                BinaryEncoder.Instance.WriteBoolean(iostr, expectedValue);
                 
                 iostr.Position = 0;
-                BinaryDecoder decoder = new BinaryDecoder();
-                bool actual = decoder.ReadBool(iostr);
+                
+                bool actual = BinaryDecoder.Instance.ReadBool(iostr);
                 Assert.AreEqual(expectedValue, actual, "Iteration {0:###,###,###,##0}", i);
             }
         }
@@ -101,11 +100,11 @@ namespace Avro.Test
             {
                 double expectedValue = random.NextDouble();
                 MemoryStream iostr = new MemoryStream();
-                BinaryEncoder encoder = new BinaryEncoder();
-                encoder.WriteDouble(iostr, expectedValue);
+                
+                BinaryEncoder.Instance.WriteDouble(iostr, expectedValue);
                 iostr.Position = 0;
-                BinaryDecoder decoder = new BinaryDecoder();
-                double actual = decoder.ReadDouble(iostr);
+                
+                double actual = BinaryDecoder.Instance.ReadDouble(iostr);
                 Assert.AreEqual(expectedValue, actual, "Iteration {0:###,###,###,##0}", i);
 
                
@@ -120,11 +119,11 @@ namespace Avro.Test
             {
                 float expectedValue = (float)random.NextDouble();
                 MemoryStream iostr = new MemoryStream();
-                BinaryEncoder encoder = new BinaryEncoder();
-                encoder.WriteFloat(iostr, expectedValue);
+                
+                BinaryEncoder.Instance.WriteFloat(iostr, expectedValue);
                 iostr.Position = 0;
-                BinaryDecoder decoder = new BinaryDecoder();
-                float actual = decoder.ReadFloat(iostr);
+                
+                float actual = BinaryDecoder.Instance.ReadFloat(iostr);
                 Assert.AreEqual(expectedValue, actual, "Iteration {0:###,###,###,##0}", i);
             }
         }
@@ -139,11 +138,11 @@ namespace Avro.Test
                 byte[] expectedValue = new byte[length];
                 random.NextBytes(expectedValue);
                 MemoryStream iostr = new MemoryStream();
-                BinaryEncoder encoder = new BinaryEncoder();
-                encoder.WriteBytes(iostr, expectedValue);
+                
+                BinaryEncoder.Instance.WriteBytes(iostr, expectedValue);
                 iostr.Position = 0;
-                BinaryDecoder decoder = new BinaryDecoder();
-                byte[] actual = decoder.ReadBytes(iostr);
+                
+                byte[] actual = BinaryDecoder.Instance.ReadBytes(iostr);
                 Assert.IsTrue(
                     ArrayHelper<byte>.Equals(expectedValue, actual)
                     , "Iteration {0:###,###,###,##0}", i);
