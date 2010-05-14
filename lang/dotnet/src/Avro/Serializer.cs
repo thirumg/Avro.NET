@@ -130,8 +130,6 @@ namespace Avro
 
             if (!proxyLookup.TryGetValue(hashcode, out proxy))
             {
-                
-
                 lock (proxyLookup)
                 {
                     //Double check to make sure that an earlier lock didn't generate our proxy. 
@@ -287,20 +285,22 @@ namespace Avro
             public MethodInfo ICollectionGetCount { get; private set; }
             public MethodInfo KeyValuePairGetKey { get; private set; }
             public MethodInfo KeyValuePairGetValue { get; private set; }
+            public Type KeyType { get; private set; }
+            public Type ValueType { get; private set; }
 
 
-
-            public DictionaryHelper(Type arg0, Type arg1)
+            public DictionaryHelper(Type keyType, Type valueType)
             {
                 const string PREFIX = "ctor(Type, Type) - ";
 
-                if (log.IsDebugEnabled) log.DebugFormat(PREFIX + "arg0 = {0}, arg1 = {1}", arg0, arg1);
-                
-                IDictionaryType = TypeHelper.CreateGenericType(typeof(IDictionary<,>), arg0, arg1);
-                DictionaryType = TypeHelper.CreateGenericType(typeof(Dictionary<,>), arg0, arg1);
+                if (log.IsDebugEnabled) log.DebugFormat(PREFIX + "arg0 = {0}, arg1 = {1}", keyType, valueType);
+                KeyType = keyType;
+                ValueType = valueType;
+                IDictionaryType = TypeHelper.CreateGenericType(typeof(IDictionary<,>), keyType, valueType);
+                DictionaryType = TypeHelper.CreateGenericType(typeof(Dictionary<,>), keyType, valueType);
                 DictionaryConstructor = DictionaryType.GetConstructor(Type.EmptyTypes);
                 DictionaryAdd = IDictionaryType.GetMethod("Add");
-                KeyValuePairType = TypeHelper.CreateGenericType(typeof(KeyValuePair<,>), arg0, arg1);
+                KeyValuePairType = TypeHelper.CreateGenericType(typeof(KeyValuePair<,>), keyType, valueType);
                 IEnumerableType = TypeHelper.CreateGenericType(typeof(IEnumerable<>), KeyValuePairType);
                 IEnumerableGetEnumerator = IEnumerableType.GetMethod("GetEnumerator");
                 IEnumeratorType = TypeHelper.CreateGenericType(typeof(IEnumerator<>), KeyValuePairType);
@@ -316,7 +316,8 @@ namespace Avro
 
                 if (log.IsDebugEnabled)
                 {
-
+                    log.DebugFormat(PREFIX + "KeyType = {0}", KeyType);
+                    log.DebugFormat(PREFIX + "ValueType = {0}", ValueType);
                     log.DebugFormat(PREFIX + "IDictionaryType = {0}", IDictionaryType);
                     log.DebugFormat(PREFIX + "DictionaryType = {0}", DictionaryType);
                     log.DebugFormat(PREFIX + "DictionaryConstructor = {0}", DictionaryConstructor);
@@ -415,9 +416,12 @@ namespace Avro
             long hashCode = getHashCode(schema, dataType);
             string methodName = string.Format("DecodeMap{0}", hashCode);
 
-            DictionaryHelper dictHelper = new DictionaryHelper(typeof(string), typeof(string));
+            Type mapValueType = getMapValueType(dataType);
+            DictionaryHelper dictHelper = new DictionaryHelper(typeof(string), mapValueType);
 
             Type[] args = getDecoderMethodArgs(dictHelper.IDictionaryType);
+
+            MethodInfo valueDecoderMethod = getMethodInfo(MethodType.Decoder, schema.ValueSchema, mapValueType);
 
             ILGenerator il=null;
             MethodInfo method = EmitHelperInstance.CreateMethod(methodName, dictHelper.IDictionaryType, args, out il);
@@ -448,9 +452,9 @@ namespace Avro
             il.Emit(OpCodes.Ldarg_1);
             il.Emit(OpCodes.Ldarg_0);
             il.Emit(OpCodes.Callvirt, DecoderHelper.ReadString);
-            il.Emit(OpCodes.Ldarg_1);
             il.Emit(OpCodes.Ldarg_0);
-            il.Emit(OpCodes.Callvirt, DecoderHelper.ReadString);
+            il.Emit(OpCodes.Ldarg_1);
+            il.Emit(OpCodes.Call, valueDecoderMethod);
             il.Emit(OpCodes.Callvirt, dictHelper.DictionaryAdd);
             il.Emit(OpCodes.Nop);
             il.Emit(OpCodes.Nop);
@@ -480,18 +484,18 @@ namespace Avro
 
         private static long getHashCode(Type dataType)
         {
-            const string PREFIX = "getHashCode(Type) - ";
+            //const string PREFIX = "getHashCode(Type) - ";
             long dataTypeHashCode = dataType.GetHashCode();
-            if (log.IsDebugEnabled) log.DebugFormat(PREFIX + "dataTypeHashCode = {0}", dataTypeHashCode);
+            //if (log.IsDebugEnabled) log.DebugFormat(PREFIX + "dataTypeHashCode = {0}", dataTypeHashCode);
             return Math.Abs(dataTypeHashCode);
         }
 
         private static long getHashCode(Schema schema, Type dataType)
         {
-            const string PREFIX = "getHashCode(Schema, Type) - ";
+            //const string PREFIX = "getHashCode(Schema, Type) - ";
             long schemaHashCode = schema.GetHashCode();
             long dataTypeHashCode = dataType.GetHashCode();
-            if (log.IsDebugEnabled) log.DebugFormat(PREFIX + "schemaHashCode = {0}, dataTypeHashCode = {1}", schemaHashCode, dataTypeHashCode);
+            //if (log.IsDebugEnabled) log.DebugFormat(PREFIX + "schemaHashCode = {0}, dataTypeHashCode = {1}", schemaHashCode, dataTypeHashCode);
             return Math.Abs(schemaHashCode) + Math.Abs(dataTypeHashCode);
         }
 
@@ -511,16 +515,16 @@ namespace Avro
                 throw new NotSupportedException("Only types based on System.Collections.Generic.IDictionary are supported.");
             }
 
-            DictionaryHelper dictHelper = new DictionaryHelper(typeof(string), typeof(string));
+            Type mapValueType = getMapValueType(dataType);
+            DictionaryHelper dictHelper = new DictionaryHelper(typeof(string), mapValueType);
+            
+            MethodInfo valueEncodeMethod = getMethodInfo(MethodType.Encoder, schema.ValueSchema, dictHelper.ValueType);
+
+
 
             long hashCode = getHashCode(schema, dataType);
             string methodName = string.Format("EncodeMap{0}", hashCode);
-            Type[] genericArgs = dataType.GetGenericArguments();
-            if(genericArgs.Length!=2)
-                throw new NotSupportedException("Only types based on System.Collections.Generic.IDictionary are supported.");
 
-            if (typeof(string) != genericArgs[0])
-                throw new NotSupportedException("Only string keys are supported.");
             Type genericTypeDef = dataType.GetGenericTypeDefinition();
             Type[] args = getEncoderMethodArgs(dataType);
 
@@ -567,11 +571,12 @@ namespace Avro
             il.Emit(OpCodes.Call, dictHelper.KeyValuePairGetKey);
             il.Emit(OpCodes.Callvirt, EncoderHelper.WriteString);
             il.Emit(OpCodes.Nop);
-            il.Emit(OpCodes.Ldarg_1);
+
             il.Emit(OpCodes.Ldarg_0);
+            il.Emit(OpCodes.Ldarg_1);
             il.Emit(OpCodes.Ldloca_S, localEntry);
             il.Emit(OpCodes.Call, dictHelper.KeyValuePairGetValue);
-            il.Emit(OpCodes.Callvirt, EncoderHelper.WriteString);
+            il.Emit(OpCodes.Call, valueEncodeMethod);
             il.Emit(OpCodes.Nop);
             il.Emit(OpCodes.Nop);
             il.MarkLabel(labelMoveNext);
@@ -614,6 +619,18 @@ namespace Avro
 
             return method;
             //return null;// method;
+        }
+
+        private static Type getMapValueType(Type dataType)
+        {
+            Type[] genericArgs = dataType.GetGenericArguments();
+            if (genericArgs.Length != 2)
+                throw new NotSupportedException("Only types based on System.Collections.Generic.IDictionary are supported.");
+            if (typeof(string) != genericArgs[0])
+                throw new NotSupportedException("Only string keys are supported.");
+
+            Type mapValueType = genericArgs[1];
+            return mapValueType;
         }
 
         static Type[] getEncoderMethodArgs(Type type)
@@ -705,34 +722,6 @@ namespace Avro
         {
             return decoder.ReadString(iostr);
         }
-
-        public static void TestEncodeMap(Stream iostr, Encoder encoder, IDictionary<string, string> data)
-        {
-            encoder.WriteMapStart(iostr);
-            encoder.SetItemCount(iostr, data.Count);
-            foreach (KeyValuePair<string, string> entry in data)
-            {
-                encoder.StartItem(iostr);
-                encoder.WriteString(iostr, entry.Key);
-                encoder.WriteString(iostr, entry.Value);
-            }
-            encoder.WriteMapEnd(iostr);
-        }
-        public static IDictionary<string, string> TestDecodeMap(Stream iostr, Decoder decoder)
-        {
-            long length = decoder.ReadMapStart(iostr);
-            IDictionary<string, string> map = new Dictionary<string, string>();
-            for (long i = 0; i < length; i++)
-            {
-                map.Add(
-                    decoder.ReadString(iostr),
-                    decoder.ReadString(iostr)
-                    );
-            }
-            
-            return map;
-        }
-
 
         public static T Deserialize<T>(PrefixStyle prefixStyle, Schema schema, MemoryStream iostr, Decoder decoder)
         {

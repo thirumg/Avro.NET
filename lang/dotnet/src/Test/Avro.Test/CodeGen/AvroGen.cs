@@ -67,6 +67,7 @@ namespace Avro.Test.CodeGen
         }
 
         [TestCase]
+        [Ignore]
         public void interop_avsc()
         {
             const string inputFile = "CodeGen/interop.avsc";

@@ -21,5 +21,29 @@ namespace Avro.Test
 
             return builder.ToString();
         }
+
+        public static bool GetBool()
+        {
+            return random.Next() % 2 == 1;
+        }
+
+        public static int GetRandomInt32()
+        {
+            bool IsNegative = GetBool();
+            int value = random.Next();
+            int mult = IsNegative ? -1 : 1;
+
+            return value * mult;
+        }
+
+        public static long GetRandomInt64()
+        {
+            return (long)GetRandomInt32();
+        }
+
+        public static float GetRandomFloat()
+        {
+            return (float)random.NextDouble();
+        }
     }
 }

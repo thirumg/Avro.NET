@@ -15,7 +15,7 @@ namespace Avro.Test
         }
 
         Random random = new Random();
-        const int ITERATIONS = 10000;
+        const int ITERATIONS = 1000;
         [TestCase]
         public void IntTests()
         {
@@ -73,10 +73,157 @@ namespace Avro.Test
 
             TestData(schema, encoder, decoder, data);
         }
+
+        const string MAPTESTING="Map Serialization";
+
+        [Category(MAPTESTING)]
+        [TestCase]
+        public void MapTests_Bool()
+        {
+            Dictionary<string, bool> expected = new Dictionary<string, bool>();
+            Encoder encoder = new BinaryEncoder();
+            Decoder decoder = new BinaryDecoder();
+            for (int i = 0; i < ITERATIONS; i++)
+            {
+                string key = string.Format("Key{0:########0}", i);
+                bool value = RandomDataHelper.GetBool();
+                expected.Add(key, value);
+            }
+
+            Schema valueSchema = new PrimitiveSchema("string");
+            MapSchema mapSchema = new MapSchema(valueSchema);
+
+            using (MemoryStream iostr = new MemoryStream())
+            {
+                Serializer.Serialize(PrefixStyle.None, mapSchema, iostr, encoder, expected);
+                iostr.Position = 0;
+                Assert.Greater(iostr.Length, 0, "Serialized length should be greater than 0.");
+                IDictionary<string, bool> actual = Serializer.Deserialize<IDictionary<string, bool>>(PrefixStyle.None, mapSchema, iostr, decoder);
+                Assert.NotNull(actual, "actual should not be null");
+                Assert.Greater(actual.Count, 0, "Deserialized Length should be greater than 0.");
+                Assert.AreEqual(expected.Count, actual.Count, "expect and actual should == {0}", actual.Count);
+
+                foreach (KeyValuePair<string, bool> expectedEntry in expected)
+                {
+                    Assert.IsTrue(actual.ContainsKey(expectedEntry.Key), "actual does not contain key \"{0}\"", expectedEntry.Key);
+                    bool actualValue = actual[expectedEntry.Key];
+                    Assert.AreEqual(expectedEntry.Value, actualValue, "Value for key \"{0}\" did not match", expectedEntry.Key);
+                }
+            }
+        }
+        [Category(MAPTESTING)]
+        [TestCase]
+        public void MapTests_Int()
+        {
+            Dictionary<string, int> expected = new Dictionary<string, int>();
+            Encoder encoder = new BinaryEncoder();
+            Decoder decoder = new BinaryDecoder();
+            for (int i = 0; i < ITERATIONS; i++)
+            {
+                string key = string.Format("Key{0:########0}", i);
+                int value = RandomDataHelper.GetRandomInt32();
+                expected.Add(key, value);
+            }
+
+            Schema valueSchema = new PrimitiveSchema("string");
+            MapSchema mapSchema = new MapSchema(valueSchema);
+
+            using (MemoryStream iostr = new MemoryStream())
+            {
+                Serializer.Serialize(PrefixStyle.None, mapSchema, iostr, encoder, expected);
+                iostr.Position = 0;
+                Assert.Greater(iostr.Length, 0, "Serialized length should be greater than 0.");
+                IDictionary<string, int> actual = Serializer.Deserialize<IDictionary<string, int>>(PrefixStyle.None, mapSchema, iostr, decoder);
+                Assert.NotNull(actual, "actual should not be null");
+                Assert.Greater(actual.Count, 0, "Deserialized Length should be greater than 0.");
+                Assert.AreEqual(expected.Count, actual.Count, "expect and actual should == {0}", actual.Count);
+
+                foreach (KeyValuePair<string, int> expectedEntry in expected)
+                {
+                    Assert.IsTrue(actual.ContainsKey(expectedEntry.Key), "actual does not contain key \"{0}\"", expectedEntry.Key);
+                    int actualValue = actual[expectedEntry.Key];
+                    Assert.AreEqual(expectedEntry.Value, actualValue, "Value for key \"{0}\" did not match", expectedEntry.Key);
+                }
+            }
+        }
+        [Category(MAPTESTING)]
+        [TestCase]
+        public void MapTests_Long()
+        {
+            Dictionary<string, long> expected = new Dictionary<string, long>();
+            Encoder encoder = new BinaryEncoder();
+            Decoder decoder = new BinaryDecoder();
+            for (int i = 0; i < ITERATIONS; i++)
+            {
+                string key = string.Format("Key{0:########0}", i);
+                long value = RandomDataHelper.GetRandomInt64();
+                expected.Add(key, value);
+            }
+
+            Schema valueSchema = new PrimitiveSchema("string");
+            MapSchema mapSchema = new MapSchema(valueSchema);
+
+            using (MemoryStream iostr = new MemoryStream())
+            {
+                Serializer.Serialize(PrefixStyle.None, mapSchema, iostr, encoder, expected);
+                iostr.Position = 0;
+                Assert.Greater(iostr.Length, 0, "Serialized length should be greater than 0.");
+                IDictionary<string, long> actual = Serializer.Deserialize<IDictionary<string, long>>(PrefixStyle.None, mapSchema, iostr, decoder);
+                Assert.NotNull(actual, "actual should not be null");
+                Assert.Greater(actual.Count, 0, "Deserialized Length should be greater than 0.");
+                Assert.AreEqual(expected.Count, actual.Count, "expect and actual should == {0}", actual.Count);
+
+                foreach (KeyValuePair<string, long> expectedEntry in expected)
+                {
+                    Assert.IsTrue(actual.ContainsKey(expectedEntry.Key), "actual does not contain key \"{0}\"", expectedEntry.Key);
+                    long actualValue = actual[expectedEntry.Key];
+                    Assert.AreEqual(expectedEntry.Value, actualValue, "Value for key \"{0}\" did not match", expectedEntry.Key);
+                }
+            }
+        }
+        [Category(MAPTESTING)]
+        [TestCase]
+        public void MapTests_Float()
+        {
+            Dictionary<string, float> expected = new Dictionary<string, float>();
+            Encoder encoder = new BinaryEncoder();
+            Decoder decoder = new BinaryDecoder();
+            for (int i = 0; i < ITERATIONS; i++)
+            {
+                string key = string.Format("Key{0:########0}", i);
+                float value = RandomDataHelper.GetRandomFloat();
+                expected.Add(key, value);
+            }
+
+            Schema valueSchema = new PrimitiveSchema("string");
+            MapSchema mapSchema = new MapSchema(valueSchema);
+
+            using (MemoryStream iostr = new MemoryStream())
+            {
+                Serializer.Serialize(PrefixStyle.None, mapSchema, iostr, encoder, expected);
+                iostr.Position = 0;
+                Assert.Greater(iostr.Length, 0, "Serialized length should be greater than 0.");
+                IDictionary<string, float> actual = Serializer.Deserialize<IDictionary<string, float>>(PrefixStyle.None, mapSchema, iostr, decoder);
+                Assert.NotNull(actual, "actual should not be null");
+                Assert.Greater(actual.Count, 0, "Deserialized Length should be greater than 0.");
+                Assert.AreEqual(expected.Count, actual.Count, "expect and actual should == {0}", actual.Count);
+
+                foreach (KeyValuePair<string, float> expectedEntry in expected)
+                {
+                    Assert.IsTrue(actual.ContainsKey(expectedEntry.Key), "actual does not contain key \"{0}\"", expectedEntry.Key);
+                    float actualValue = actual[expectedEntry.Key];
+                    Assert.AreEqual(expectedEntry.Value, actualValue, "Value for key \"{0}\" did not match", expectedEntry.Key);
+                }
+            }
+        }
+
+
+
+        [Category(MAPTESTING)]
         [TestCase]
         public void MapTests_String()
         {
-            Dictionary<string, string> expected = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+            Dictionary<string, string> expected = new Dictionary<string, string>();
             Encoder encoder = new BinaryEncoder();
             Decoder decoder = new BinaryDecoder();
             for (int i = 0; i < ITERATIONS; i++)
@@ -89,11 +236,8 @@ namespace Avro.Test
             Schema valueSchema = new PrimitiveSchema("string");
             MapSchema mapSchema = new MapSchema(valueSchema);
 
-            System.Diagnostics.Stopwatch watch = System.Diagnostics.Stopwatch.StartNew();
-
             using (MemoryStream iostr = new MemoryStream())
             {
-                //IDictionary<string, string> actual = Serializer.Deserialize<IDictionary<string, string>>(PrefixStyle.None, mapSchema, iostr, decoder);
                 Serializer.Serialize(PrefixStyle.None, mapSchema, iostr, encoder, expected);
                 iostr.Position = 0;
                 Assert.Greater(iostr.Length, 0, "Serialized length should be greater than 0.");
@@ -110,13 +254,6 @@ namespace Avro.Test
                     Assert.AreEqual(expectedEntry.Value, actualValue, "Value for key \"{0}\" did not match", expectedEntry.Key); 
                 }
             }
-
-            watch.Stop();
-
-
-
-
-
         }
 
         void TestData(Schema schema, Encoder encoder, Decoder decoder, object[] data)
