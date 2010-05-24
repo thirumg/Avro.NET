@@ -8,6 +8,18 @@ namespace Avro.Test
     {
         static Random random = new Random();
 
+        public static byte[] GetBytes(int min, int max)
+        {
+            int length = random.Next(min, max);
+            return GetBytes(length);
+        }
+        public static byte[] GetBytes(int length)
+        {
+            byte[] buffer = new byte[length];
+            random.NextBytes(buffer);
+            return buffer;
+        }
+
         public static string GetString(int min, int max)
         {
             System.Text.StringBuilder builder = new System.Text.StringBuilder();

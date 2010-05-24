@@ -7,7 +7,7 @@ namespace Avro
     public class ErrorSchema:RecordSchema
     {
         public ErrorSchema(Name name, IEnumerable<Field> fields, Names names)
-            : base(Schema.ERROR, name, fields, names)
+            : base(SchemaType.ERROR, name, fields, names)
         {
 
         }

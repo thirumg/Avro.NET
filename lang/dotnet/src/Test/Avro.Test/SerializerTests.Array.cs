@@ -11,7 +11,7 @@ namespace Avro.Test
         [TestCase]
         public void Array_String()
         {
-            Schema schema = new ArraySchema(new PrimitiveSchema(Schema.STRING));
+            Schema schema = new ArraySchema(PrimitiveSchema.String);
             string[] expected = new string[ITERATIONS];
             for (int i = 0; i < expected.Length; i++)
                 expected[i] = RandomDataHelper.GetString(50, 1000);
@@ -25,54 +25,78 @@ namespace Avro.Test
                 Assert.IsNotNull(actual);
                 Assert.AreEqual(expected.LongLength, actual.LongLength);
 
+                for (int i = 0; i < expected.Length; i++)
+                    Assert.AreEqual(expected[i], actual[i], "Index {0} does not match", i);
             }
-
-
         }
-
-        public static string ReadString(Stream stream, Decoder decoder)
+        [TestCase]
+        //[Ignore]
+        public void Array_Int32()
         {
-            return decoder.ReadString(stream);
-        }
-
-        public static string[] DeserializeArray(Stream stream, Decoder decoder)
-        {
-            long length = decoder.ReadLong(stream);
-            string[] values = new string[length];
-
-            for (long i = 0; i < length; i++)
+            Schema schema = new ArraySchema(PrimitiveSchema.Int);
+            int[] expected = new int[ITERATIONS];
+            for (int i = 0; i < expected.Length; i++)
             {
-                values[i] = ReadString(stream, decoder);
+                expected.SetValue(RandomDataHelper.GetRandomInt32(), i);
             }
+                
 
-            return values;
+            using (MemoryStream iostr = new MemoryStream())
+            {
+                Serializer.Serialize(PrefixStyle.None, schema, iostr, BinaryEncoder.Instance, expected);
+                Assert.Greater(iostr.Length, 0);
+                iostr.Position = 0L;
+                int[] actual = Serializer.Deserialize<int[]>(PrefixStyle.None, schema, iostr, BinaryDecoder.Instance);
+                Assert.IsNotNull(actual);
+                Assert.AreEqual(expected.LongLength, actual.LongLength);
+
+                for (int i = 0; i < expected.Length; i++)
+                    Assert.AreEqual(expected[i], actual[i], "Index {0} does not match", i);
+            }
         }
-
-
-        public static void SerializeString(Stream iostr, Encoder encoder, string value)
+        [TestCase]
+        [Ignore]
+        public void Array_Int64()
         {
-            encoder.WriteString(iostr, value);
+            Schema schema = new ArraySchema(PrimitiveSchema.Long);
+            long[] expected = new long[ITERATIONS];
+            for (int i = 0; i < expected.Length; i++)
+                expected[i] = RandomDataHelper.GetRandomInt32();
+
+            using (MemoryStream iostr = new MemoryStream())
+            {
+                Serializer.Serialize(PrefixStyle.None, schema, iostr, BinaryEncoder.Instance, expected);
+                Assert.Greater(iostr.Length, 0);
+                iostr.Position = 0L;
+                long[] actual = Serializer.Deserialize<long[]>(PrefixStyle.None, schema, iostr, BinaryDecoder.Instance);
+                Assert.IsNotNull(actual);
+                Assert.AreEqual(expected.LongLength, actual.LongLength);
+
+                for (int i = 0; i < expected.Length; i++)
+                    Assert.AreEqual(expected[i], actual[i], "Index {0} does not match", i);
+            }
         }
-
-        public static void SerializeArray(Stream iostr, Encoder encoder, string[] value)
+        [TestCase]
+        [Ignore]
+        public void Array_Float()
         {
-            encoder.WriteArrayStart(iostr);
-            encoder.WriteLong(iostr, value.LongLength);
+            Schema schema = new ArraySchema(PrimitiveSchema.Float);
+            float[] expected = new float[ITERATIONS];
+            for (int i = 0; i < expected.Length; i++)
+                expected[i] = RandomDataHelper.GetRandomInt32();
 
-            for (long i = 0; i < value.LongLength; i++)
-                SerializeString(iostr, encoder, value[i]);
+            using (MemoryStream iostr = new MemoryStream())
+            {
+                Serializer.Serialize(PrefixStyle.None, schema, iostr, BinaryEncoder.Instance, expected);
+                Assert.Greater(iostr.Length, 0);
+                iostr.Position = 0L;
+                float[] actual = Serializer.Deserialize<float[]>(PrefixStyle.None, schema, iostr, BinaryDecoder.Instance);
+                Assert.IsNotNull(actual);
+                Assert.AreEqual(expected.LongLength, actual.LongLength);
 
-            encoder.WriteArrayEnd(iostr);
-        }
-        public static void SerializeArray(Stream iostr, Encoder encoder, IList<string> value)
-        {
-            encoder.WriteArrayStart(iostr);
-            encoder.WriteLong(iostr, value.Count);
-
-            for (int i = 0; i < value.Count; i++)
-                encoder.WriteString(iostr, value[i]);
-
-            encoder.WriteArrayEnd(iostr);
+                for (int i = 0; i < expected.Length; i++)
+                    Assert.AreEqual(expected[i], actual[i], "Index {0} does not match", i);
+            }
         }
     }
 }

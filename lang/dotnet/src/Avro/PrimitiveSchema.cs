@@ -6,6 +6,14 @@ namespace Avro
 {
     public class PrimitiveSchema:Schema
     {
+        public static readonly Schema Null;
+        public static readonly Schema Boolean;
+        public static readonly Schema Int;
+        public static readonly Schema Long;
+        public static readonly Schema Float;
+        public static readonly Schema Double;
+        public static readonly Schema Bytes;
+        public static readonly Schema String;
         public static readonly string[] SupportedTypes;
         //public static readonly IDictionary<SchemaType, string> PrimitiveValueLookup;
         public static readonly IDictionary<string, string> PrimitiveKeyLookup;
@@ -28,11 +36,15 @@ namespace Avro
                 keylookup.Add(key, key);
             }
             PrimitiveKeyLookup = keylookup;
-                
 
-
-            ////PrimitiveValueLookup = EnumHelper<SchemaType>.CreateValueLookup(SupportedTypes);
-            //PrimitiveKeyLookup = EnumHelper<SchemaType>.CreateKeyLookup(SupportedTypes);
+            Null = new PrimitiveSchema(SchemaType.NULL);
+            Boolean = new PrimitiveSchema(SchemaType.BOOLEAN);
+            Int = new PrimitiveSchema(SchemaType.INT);
+            Long = new PrimitiveSchema(SchemaType.LONG);
+            Float = new PrimitiveSchema(SchemaType.FLOAT);
+            Double = new PrimitiveSchema(SchemaType.DOUBLE);
+            Bytes = new PrimitiveSchema(SchemaType.BYTES);
+            String = new PrimitiveSchema(SchemaType.STRING);
         }
 
         public PrimitiveSchema(string type)
@@ -44,10 +56,7 @@ namespace Avro
             }
         }
 
-        //internal override void writeJson(Newtonsoft.Json.JsonTextWriter writer)
-        //{
-        //    writer.WriteValue(this.Type);
-        //}
+
 
         public static Schema Create(string json)
         {
@@ -65,5 +74,7 @@ namespace Avro
         {
             return this.Type.GetHashCode();
         }
+
+
     }
 }

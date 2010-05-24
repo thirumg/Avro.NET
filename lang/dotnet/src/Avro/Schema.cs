@@ -45,21 +45,7 @@ namespace Avro
 
     public class Schema
     {
-        public const string UNION = "union";
-        public const string BOOLEAN = "boolean";
-        public const string INT = "int";
-        public const string LONG = "long";
-        public const string FLOAT = "float";
-        public const string DOUBLE = "double";
-        public const string ARRAY = "array";
-        public const string MAP = "map";
-        public const string STRING = "string";
-        public const string BYTES = "bytes";
-        public const string NULL = "null";
-        public const string ENUM = "enum";
-        public const string FIXED = "fixed";
-        public const string RECORD = "record";
-        public const string ERROR = "error";
+
         private static readonly Logger log = new Logger();
         public string Type { get; private set; }
         private IDictionary<string, string> Props;
@@ -185,9 +171,9 @@ namespace Avro
 
                             RecordSchema record = null;
 
-                            if (Schema.ERROR == type)
+                            if (SchemaType.ERROR == type)
                                 record = new ErrorSchema(name, null, names);
-                            else if (Schema.RECORD == type)
+                            else if (SchemaType.RECORD == type)
                                 record = new RecordSchema(name, null, names);
 
                             if (null != name && !names.Contains(schema)) names.Add(record);

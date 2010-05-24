@@ -16,16 +16,14 @@ namespace Avro.CodeGen
         static AvroGen()
         {
             Dictionary<string, CodeTypeReference> primitiveLookup = new Dictionary<string, CodeTypeReference>();
-            primitiveLookup.Add(Schema.BYTES, new CodeTypeReference(typeof(byte[])));
-            primitiveLookup.Add(Schema.STRING, new CodeTypeReference(typeof(string)));
-            primitiveLookup.Add(Schema.INT, new CodeTypeReference(typeof(int)));
-            primitiveLookup.Add(Schema.LONG, new CodeTypeReference(typeof(long)));
-            primitiveLookup.Add(Schema.BOOLEAN, new CodeTypeReference(typeof(bool)));
-            primitiveLookup.Add(Schema.DOUBLE, new CodeTypeReference(typeof(double)));
-            primitiveLookup.Add(Schema.FLOAT, new CodeTypeReference(typeof(float)));
-
-
-            primitiveLookup.Add(Schema.NULL, null);
+            primitiveLookup.Add(SchemaType.BYTES, new CodeTypeReference(typeof(byte[])));
+            primitiveLookup.Add(SchemaType.STRING, new CodeTypeReference(typeof(string)));
+            primitiveLookup.Add(SchemaType.INT, new CodeTypeReference(typeof(int)));
+            primitiveLookup.Add(SchemaType.LONG, new CodeTypeReference(typeof(long)));
+            primitiveLookup.Add(SchemaType.BOOLEAN, new CodeTypeReference(typeof(bool)));
+            primitiveLookup.Add(SchemaType.DOUBLE, new CodeTypeReference(typeof(double)));
+            primitiveLookup.Add(SchemaType.FLOAT, new CodeTypeReference(typeof(float)));
+            primitiveLookup.Add(SchemaType.NULL, null);
 
             _PrimitiveLookup = primitiveLookup;
         }
@@ -125,31 +123,31 @@ namespace Avro.CodeGen
 
         private void processSchema(CodeNamespace ns, Schema schema)
         {
-            if (Schema.ENUM == schema.Type)
+            if (SchemaType.ENUM == schema.Type)
             {
                 processEnum(schema, ns);
             }
-            else if (Schema.FIXED == schema.Type)
+            else if (SchemaType.FIXED == schema.Type)
             {
                 processFixed(schema);
             }
-            else if (Schema.RECORD == schema.Type)
+            else if (SchemaType.RECORD == schema.Type)
             {
                 processRecord(schema, ns);
             }
-            else if (Schema.ERROR == schema.Type)
+            else if (SchemaType.ERROR == schema.Type)
             {
                 CodeTypeDeclaration errorRecord = processRecord(schema, ns);
             }
-            else if (Schema.ARRAY == schema.Type)
+            else if (SchemaType.ARRAY == schema.Type)
             {
                 processArray(schema);
             }
-            else if (Schema.MAP == schema.Type)
+            else if (SchemaType.MAP == schema.Type)
             {
                 procesMap(schema);
             }
-            else if (Schema.UNION == schema.Type)
+            else if (SchemaType.UNION == schema.Type)
             {
                 processUnion(schema);
             }
@@ -238,7 +236,7 @@ namespace Avro.CodeGen
 
             foreach (Field field in recordSchema.Fields)
             {
-                if (Schema.NULL == field.Schema.Type)
+                if (SchemaType.NULL == field.Schema.Type)
                 {
                     //TODO: Look into this. It just feels wrong. I don't understand the need for a null field, but can this be stubbed out so that it will at least generate a field with type of object?
                     if (log.IsDebugEnabled) log.DebugFormat("Skipping field \"{0}\" because it is null", field.Name);

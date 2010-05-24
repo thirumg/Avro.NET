@@ -7,7 +7,7 @@ namespace Avro
     public class BooleanSchema:PrimitiveSchema
     {
         public BooleanSchema()
-            : base(Schema.BOOLEAN)
+            : base(SchemaType.BOOLEAN)
         {
 
         }
