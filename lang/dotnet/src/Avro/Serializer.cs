@@ -206,7 +206,7 @@ namespace Avro
         private static MethodInfo generateRecordDecoder(RecordSchema schema, Type dataType)
         {
             const string PREFIX = "generateRecordDecoder(RecordSchema, Type) - ";
-            if (log.IsDebugEnabled) log.DebugFormat(PREFIX + "dataType = {0}", dataType);
+            if (log.IsDebugEnabled) log.DebugFormat(PREFIX + "type = {0}", dataType);
 
             ConstructorInfo defaultConstructor = dataType.GetConstructor(Type.EmptyTypes);
             if (log.IsDebugEnabled) log.DebugFormat(PREFIX + "defaultConstructor = {0}", defaultConstructor);
@@ -354,25 +354,172 @@ namespace Avro
 
         private static MethodInfo generateArrayDecoder(ArraySchema schema, Type dataType)
         {
+            const string PREFIX = "generateArrayEncoder(ArraySchema, Type) - ";
+            if (log.IsDebugEnabled) log.DebugFormat(PREFIX + "Generating encode method for {0} schema = {1}", dataType, schema);
 
-            throw new NotImplementedException();
+            validateArrayType(dataType);
+            Type elementType = dataType.GetElementType();
+
+            MethodInfo valueEncodeMethod = getMethodInfo(MethodType.Decoder, schema.ItemSchema, elementType);
+            long hashCode = getHashCode(schema, dataType);
+            string methodName = string.Format("DecodeArray{0}", hashCode);
+
+            Type[] args = getDecoderMethodArgs(dataType);
+            ILGenerator il = null;
+            MethodInfo method = EmitHelperInstance.CreateMethod(methodName, dataType, args, out il);
+            LocalBuilder localLength = il.DeclareLocal(typeof(long));
+            LocalBuilder localValues = il.DeclareLocal(dataType);
+            LocalBuilder localI = il.DeclareLocal(typeof(long));
+            LocalBuilder localTempHolder = il.DeclareLocal(dataType);
+            LocalBuilder localFlag = il.DeclareLocal(typeof(bool));
+            Label label0 = il.DefineLabel();
+            Label label1 = il.DefineLabel();
+            Label label2 = il.DefineLabel();
+
+            il.Emit(OpCodes.Nop);
+            il.Emit(OpCodes.Ldarg_1);
+            il.Emit(OpCodes.Ldarg_0);
+            il.Emit(OpCodes.Callvirt, DecoderHelper.ReadLong);
+            il.Emit(OpCodes.Stloc_0);
+            il.Emit(OpCodes.Ldloc_0);
+            il.Emit(OpCodes.Conv_Ovf_I);
+            il.Emit(OpCodes.Newarr, elementType);
+            il.Emit(OpCodes.Stloc_1);
+            il.Emit(OpCodes.Ldc_I4_0);
+            il.Emit(OpCodes.Conv_I8);
+            il.Emit(OpCodes.Stloc_2);
+            il.Emit(OpCodes.Br_S, label0);
+            il.MarkLabel(label1);
+            il.Emit(OpCodes.Nop);
+            il.Emit(OpCodes.Ldloc_1);
+            il.Emit(OpCodes.Ldloc_2);
+            il.Emit(OpCodes.Conv_Ovf_I);
+            il.Emit(OpCodes.Ldarg_0);
+            il.Emit(OpCodes.Ldarg_1);
+            il.Emit(OpCodes.Call, valueEncodeMethod);
+            il.Emit(OpCodes.Stelem_Ref);
+            il.Emit(OpCodes.Nop);
+            il.Emit(OpCodes.Ldloc_2);
+            il.Emit(OpCodes.Ldc_I4_1);
+            il.Emit(OpCodes.Conv_I8);
+            il.Emit(OpCodes.Add);
+            il.Emit(OpCodes.Stloc_2);
+            il.MarkLabel(label0);
+            il.Emit(OpCodes.Ldloc_2);
+            il.Emit(OpCodes.Ldloc_0);
+            il.Emit(OpCodes.Clt);
+            il.Emit(OpCodes.Stloc_S, localFlag);
+            il.Emit(OpCodes.Ldloc_S, localFlag);
+            il.Emit(OpCodes.Brtrue_S, label1);
+            il.Emit(OpCodes.Ldloc_1);
+            il.Emit(OpCodes.Stloc_3);
+            il.Emit(OpCodes.Br_S, label2);
+            il.MarkLabel(label2);
+            il.Emit(OpCodes.Ldloc_3);
+            il.Emit(OpCodes.Ret);
+
+            EmitHelperInstance.Save();
+
+            return method;
         }
+
+
+
+        static void validateArrayType(Type type)
+        {
+            if (!type.IsArray)
+                throw new NotSupportedException(type + " is not supported for array serialization / deserialization");
+
+
+        }
+
+        private static readonly MethodInfo Array_GetLongLength = typeof(Array).GetMethod("get_LongLength");
 
         private static MethodInfo generateArrayEncoder(ArraySchema schema, Type dataType)
         {
-            if (!dataType.IsArray)
-                throw new NotSupportedException();
-            throw new NotImplementedException();
+            const string PREFIX = "generateArrayEncoder(ArraySchema, Type) - ";
+            if (log.IsDebugEnabled) log.DebugFormat(PREFIX + "Generating encode method for {0} schema = {1}", dataType, schema);
+
+            validateArrayType(dataType);
+            Type elementType = dataType.GetElementType();
+
+            MethodInfo valueEncodeMethod = getMethodInfo(MethodType.Encoder, schema.ItemSchema, elementType);
+
+
+            long hashCode = getHashCode(schema, dataType);
+            string methodName = string.Format("EncodeArray{0}", hashCode);
+
+
+            Type[] args = getEncoderMethodArgs(dataType);
+            ILGenerator il = null;
+            MethodInfo method = EmitHelperInstance.CreateMethod(methodName, null, args, out il);
+            LocalBuilder localI = il.DeclareLocal(typeof(long));
+            LocalBuilder localFlag = il.DeclareLocal(typeof(bool));
+            Label label0 = il.DefineLabel();
+            Label label1 = il.DefineLabel();
+
+            il.Emit(OpCodes.Nop);
+            il.Emit(OpCodes.Ldarg_1);
+            il.Emit(OpCodes.Ldarg_0);
+            il.Emit(OpCodes.Callvirt, EncoderHelper.WriteArrayStart);
+            il.Emit(OpCodes.Nop);
+            il.Emit(OpCodes.Ldarg_1);
+            il.Emit(OpCodes.Ldarg_0);
+            il.Emit(OpCodes.Ldarg_2);
+            il.Emit(OpCodes.Callvirt, Array_GetLongLength);
+            il.Emit(OpCodes.Callvirt, EncoderHelper.WriteLong);
+            il.Emit(OpCodes.Nop);
+            il.Emit(OpCodes.Ldc_I4_0);
+            il.Emit(OpCodes.Conv_I8);
+            il.Emit(OpCodes.Stloc_0);
+            il.Emit(OpCodes.Br_S, label1);
+            il.MarkLabel(label0);
+            il.Emit(OpCodes.Ldarg_0);
+            il.Emit(OpCodes.Ldarg_1);
+            il.Emit(OpCodes.Ldarg_2);
+            il.Emit(OpCodes.Ldloc_0);
+            il.Emit(OpCodes.Conv_Ovf_I);
+            il.Emit(OpCodes.Ldelem_Ref);
+            il.Emit(OpCodes.Call, valueEncodeMethod);
+            il.Emit(OpCodes.Nop);
+            il.Emit(OpCodes.Ldloc_0);
+            il.Emit(OpCodes.Ldc_I4_1);
+            il.Emit(OpCodes.Conv_I8);
+            il.Emit(OpCodes.Add);
+            il.Emit(OpCodes.Stloc_0);
+            il.MarkLabel(label1);
+            il.Emit(OpCodes.Ldloc_0);
+            il.Emit(OpCodes.Ldarg_2);
+            il.Emit(OpCodes.Callvirt, Array_GetLongLength);
+            il.Emit(OpCodes.Clt);
+            il.Emit(OpCodes.Stloc_1);
+            il.Emit(OpCodes.Ldloc_1);
+            il.Emit(OpCodes.Brtrue_S, label0);
+            il.Emit(OpCodes.Ldarg_1);
+            il.Emit(OpCodes.Ldarg_0);
+            il.Emit(OpCodes.Callvirt, EncoderHelper.WriteArrayEnd);
+            il.Emit(OpCodes.Nop);
+            il.Emit(OpCodes.Ret);
+
+
+
+
+            EmitHelperInstance.Save();
+
+            return method;
         }
 
         static class EncoderHelper
         {
             private static readonly Logger log;
-            public static MethodInfo WriteMapStart;
-            public static MethodInfo SetItemCount;
-            public static MethodInfo StartItem;
-            public static MethodInfo WriteString;
-            public static MethodInfo WriteMapEnd;
+            public static readonly MethodInfo WriteMapStart;
+            public static readonly MethodInfo SetItemCount;
+            public static readonly MethodInfo StartItem;
+            public static readonly MethodInfo WriteString;
+            public static readonly MethodInfo WriteMapEnd;
+            public static readonly MethodInfo WriteArrayStart;
+            public static readonly MethodInfo WriteArrayEnd;
+            public static readonly MethodInfo WriteLong;
 
             static EncoderHelper()
             {
@@ -384,14 +531,20 @@ namespace Avro
                 StartItem = EncoderType.GetMethod("StartItem");
                 WriteString = EncoderType.GetMethod("WriteString");
                 WriteMapEnd = EncoderType.GetMethod("WriteMapEnd");
+                WriteArrayStart = EncoderType.GetMethod("WriteArrayStart");
+                WriteArrayEnd = EncoderType.GetMethod("WriteArrayEnd");
+                WriteLong = EncoderType.GetMethod("WriteLong");
 
                 if (log.IsDebugEnabled)
                 {
                     log.DebugFormat(PREFIX + "WriteMapStart = {0}", WriteMapStart);
                     log.DebugFormat(PREFIX + "SetItemCount = {0}", SetItemCount);
                     log.DebugFormat(PREFIX + "StartItem = {0}", StartItem);
-                    log.DebugFormat(PREFIX + "methodWriteString = {0}", WriteString);
-                    log.DebugFormat(PREFIX + "methodWriteMapEnd = {0}", WriteMapEnd);
+                    log.DebugFormat(PREFIX + "WriteString = {0}", WriteString);
+                    log.DebugFormat(PREFIX + "WriteMapEnd = {0}", WriteMapEnd);
+                    log.DebugFormat(PREFIX + "WriteArrayStart = {0}", WriteArrayStart);
+                    log.DebugFormat(PREFIX + "WriteArrayEnd = {0}", WriteArrayEnd);
+                    log.DebugFormat(PREFIX + "WriteLong = {0}", WriteLong);
                 }
 
             }
@@ -406,6 +559,7 @@ namespace Avro
             public static readonly Type DecoderType;
             public static readonly MethodInfo ReadMapStart;
             public static readonly MethodInfo ReadString;
+            public static readonly MethodInfo ReadLong;
 
             static DecoderHelper()
             {
@@ -414,11 +568,13 @@ namespace Avro
                 DecoderType = typeof(Decoder);
                 ReadMapStart = DecoderType.GetMethod("ReadMapStart");
                 ReadString = DecoderType.GetMethod("ReadString");
+                ReadLong = DecoderType.GetMethod("ReadLong");
                 if (log.IsDebugEnabled)
                 {
                     log.DebugFormat(PREFIX + "DecoderType = {0}", DecoderType);
                     log.DebugFormat(PREFIX + "ReadMapStart = {0}", ReadMapStart);
                     log.DebugFormat(PREFIX + "ReadString = {0}", ReadString);
+                    log.DebugFormat(PREFIX + "ReadLong = {0}", ReadLong);
                 }
             }
 
@@ -590,7 +746,7 @@ namespace Avro
         private static MethodInfo generateMapDecoder(MapSchema schema, Type dataType)
         {
             const string PREFIX = "generateMapDecoder(MapSchema, Type) - ";
-            if (log.IsDebugEnabled) log.DebugFormat(PREFIX + "dataType = {0}, schema = {1}", dataType, schema);
+            if (log.IsDebugEnabled) log.DebugFormat(PREFIX + "type = {0}, schema = {1}", dataType, schema);
 
             long hashCode = getHashCode(schema, dataType);
             string methodName = string.Format("DecodeMap{0}", hashCode);

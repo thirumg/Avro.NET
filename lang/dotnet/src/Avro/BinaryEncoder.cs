@@ -165,5 +165,19 @@ namespace Avro
         {
             WriteLong(Stream, 0);
         }
+
+
+
+        public void WriteArrayStart(Stream Stream)
+        {
+            
+        }
+
+        public void WriteArrayEnd(Stream Stream)
+        {
+            WriteLong(Stream, 0);
+        }
+
+        
     }
 }

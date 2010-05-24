@@ -6,6 +6,9 @@ namespace Avro.IO
 {
     public interface Encoder
     {
+        void WriteArrayStart(Stream iostr);
+        void WriteArrayEnd(Stream iostr);
+
         void WriteMapStart(Stream iostr);
         void SetItemCount(Stream iostr, int value);
         void StartItem(Stream iostr);

@@ -209,7 +209,7 @@ namespace Avro.CodeGen
 
 
 
-            CodeTypeReference arrayItemRef = getCodeTypeReference(arraySchema.Items);
+            CodeTypeReference arrayItemRef = getCodeTypeReference(arraySchema.ItemSchema);
 
             CodeTypeReference arrayRef = new CodeTypeReference(arrayItemRef, 1);
 

@@ -22,14 +22,14 @@ namespace Avro.Test
             return builder.ToString();
         }
 
-        public static bool GetBool()
+        public static bool GetRandomBool()
         {
             return random.Next() % 2 == 1;
         }
 
         public static int GetRandomInt32()
         {
-            bool IsNegative = GetBool();
+            bool IsNegative = GetRandomBool();
             int value = random.Next();
             int mult = IsNegative ? -1 : 1;
 

@@ -6,21 +6,21 @@ namespace Avro
 {
     public class ArraySchema:Schema
     {
-        public Schema Items { get; set; }
+        public Schema ItemSchema { get; set; }
 
         public ArraySchema(Schema items)
             : base("array")
         {
             if (null == items) throw new ArgumentNullException("items", "items cannot be null.");
-            this.Items = items;
+            this.ItemSchema = items;
         }
 
         protected override void WriteProperties(Newtonsoft.Json.JsonTextWriter writer)
         {
-            if (null != this.Items)
+            if (null != this.ItemSchema)
             {
                 writer.WritePropertyName("items");
-                this.Items.writeJson(writer);
+                this.ItemSchema.writeJson(writer);
             }
         }
     }

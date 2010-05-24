@@ -38,6 +38,8 @@
       <HintPath>..\..\contrib\NUnit-2.5.5.10112\bin\net-2.0\nunit.framework.dll</HintPath>
     </Reference>
     <Reference Include="System" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="BinaryEncodingTests.cs" />
@@ -79,6 +81,10 @@
       <Link>CodeGen\WordCount.avsc</Link>
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
+    <Compile Include="SerializerTests.Array.cs" />
+    <Compile Include="SerializerTests.Map.cs" />
+    <Compile Include="SerializerTests.Primitive.cs" />
+    <Compile Include="SerializerTests.Record.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
