@@ -178,10 +178,7 @@ namespace Avro
             throw new NotSupportedException("Schema of type " + schema.Type + " is not supported yet.");
         }
 
-        private static MethodInfo generateRecordDecoder(RecordSchema schema, Type dataType)
-        {
-            throw new NotImplementedException();
-        }
+
 
         private static readonly Type FieldAttributeType = typeof(FieldAttribute);
 
@@ -192,14 +189,136 @@ namespace Avro
             public string Name { get; set; }
         }
 
+        struct RecordState
+        {
+            public string FieldName;
+            public PropertyInfo Property;
+            public FieldAttribute FieldAttribute;
+
+            public RecordState(string fieldname, PropertyInfo property, FieldAttribute field)
+            {
+                this.FieldName = fieldname;
+                this.Property = property;
+                this.FieldAttribute = field;
+            }
+        }
+
+        private static MethodInfo generateRecordDecoder(RecordSchema schema, Type dataType)
+        {
+            const string PREFIX = "generateRecordDecoder(RecordSchema, Type) - ";
+            if (log.IsDebugEnabled) log.DebugFormat(PREFIX + "dataType = {0}", dataType);
+
+            ConstructorInfo defaultConstructor = dataType.GetConstructor(Type.EmptyTypes);
+            if (log.IsDebugEnabled) log.DebugFormat(PREFIX + "defaultConstructor = {0}", defaultConstructor);
+            if (null == defaultConstructor)
+                throw new NotSupportedException("Types without a default constructor are not supported.");
+
+            long hashCode = getHashCode(schema, dataType);
+            string methodName = string.Format("DecodeRecord{0}", hashCode);
+            Type[] args = getDecoderMethodArgs(dataType);
+
+            ILGenerator il = null;
+            MethodInfo method = EmitHelperInstance.CreateMethod(methodName, dataType, args, out il);
+            LocalBuilder recordLocal = il.DeclareLocal(dataType);
+
+            il.Emit(OpCodes.Nop);
+            il.Emit(OpCodes.Newobj, defaultConstructor);
+            il.Emit(OpCodes.Stloc_0);
+
+            Dictionary<string, RecordState> fieldLookup = getFieldAttributes(dataType);
+
+            foreach (Field field in schema.Fields)
+            {
+                RecordState state;
+
+                if (!fieldLookup.TryGetValue(field.Name, out state))
+                {
+                    if (log.IsDebugEnabled) log.DebugFormat(PREFIX + "field \"{0}\" is not represented in type \"{1}\"", field.Name, dataType);
+
+                    continue;
+                }
+
+
+                il.Emit(OpCodes.Ldloc_0);
+                
+                il.Emit(OpCodes.Ldarg_0);
+                il.Emit(OpCodes.Ldarg_1);
+
+                MethodInfo propertyMethod = getMethodInfo(MethodType.Decoder, field.Schema, state.Property.PropertyType);
+                MethodInfo setMethod= state.Property.GetSetMethod();
+                il.Emit(OpCodes.Call, propertyMethod);
+                il.Emit(OpCodes.Callvirt, setMethod);
+                il.Emit(OpCodes.Nop);
+
+            }
+
+            il.Emit(OpCodes.Ldloc_0);
+            il.Emit(OpCodes.Ret);
+
+
+
+
+
+
+            EmitHelperInstance.Save();
+            
+            return method;
+        }
+
+
         private static MethodInfo generateRecordEncoder(RecordSchema schema, Type dataType)
         {
             const string PREFIX = "generateRecordEncoder(RecordSchema, Type) - ";
 
+            long hashCode = getHashCode(schema, dataType);
+            string methodName = string.Format("EncodeRecord{0}", hashCode);
+            Type[] args = getEncoderMethodArgs(dataType);
+
+            Dictionary<string, RecordState> recordLookup = getFieldAttributes(dataType);
+
+            ILGenerator il = null;
+            MethodInfo method = EmitHelperInstance.CreateMethod(methodName, null, args, out il);
+            il.Emit(OpCodes.Nop);
+
+
+
+            foreach (Field field in schema.Fields)
+            {
+                RecordState state;
+
+                if (log.IsDebugEnabled) log.DebugFormat(PREFIX + "Looking up field \"{0}\"", field.Name);
+                if (!recordLookup.TryGetValue(field.Name, out state))
+                {
+                    if (log.IsWarnEnabled) log.WarnFormat(PREFIX + "Field \"{0}\" was not found.", field.Name);
+                }
+
+                MethodInfo propertyMethod = getMethodInfo(MethodType.Encoder, field.Schema, state.Property.PropertyType);
+                MethodInfo getPropertyMethod = state.Property.GetGetMethod();
+                il.Emit(OpCodes.Ldarg_0);
+                il.Emit(OpCodes.Ldarg_1);
+                il.Emit(OpCodes.Ldarg_2);
+                //il.Emit(OpCodes.Ldarg_3);
+                il.Emit(OpCodes.Callvirt, getPropertyMethod);
+                il.Emit(OpCodes.Call, propertyMethod);
+                il.Emit(OpCodes.Nop);
+
+                //il.Emit(OpCodes.Call
+            }
+            il.Emit(OpCodes.Ret);
+
+            EmitHelperInstance.Save();
+
+            return method;
+        }
+
+        private static Dictionary<string, RecordState> getFieldAttributes(Type dataType)
+        {
+            //TODO:Comeback and add support for fields. 
+
+            const string PREFIX = "getFieldAttributes(Type) - ";
+
+            Dictionary<string, RecordState> recordLookup = new Dictionary<string, RecordState>(StringComparer.OrdinalIgnoreCase);
             PropertyInfo[] properties = dataType.GetProperties();
-
-
-
             foreach (PropertyInfo property in properties)
             {
                 if (log.IsDebugEnabled) log.DebugFormat(PREFIX + "checking property \"{0}\"", property.Name);
@@ -215,18 +334,22 @@ namespace Avro
 
                 if (string.IsNullOrEmpty(attribute.Name))
                 {
-
-
+                    if (log.IsDebugEnabled) log.DebugFormat(PREFIX + "Attribute Name is null, so using property name \"{0}\"", property.Name);
+                    attribute.Name = property.Name;
                 }
 
-
+                RecordState state = new RecordState(attribute.Name, property, attribute);
+                try
+                {
+                    recordLookup.Add(state.FieldName, state);
+                }
+                catch (Exception ex)
+                {
+                    if (log.IsErrorEnabled) log.Error("Exception thrown while adding key \"" + state.FieldName + "\"", ex);
+                    throw;
+                }
             }
-
-
-
-
-
-                throw new NotImplementedException();
+            return recordLookup;
         }
 
         private static MethodInfo generateArrayDecoder(ArraySchema schema, Type dataType)
@@ -321,8 +444,6 @@ namespace Avro
                 if (log.IsDebugEnabled) log.DebugFormat(PREFIX + "returnType = {0}", returnType);
                 return returnType;
             }
-
-
         }
 
         class DictionaryHelper
@@ -781,12 +902,12 @@ namespace Avro
             return decoder.ReadString(iostr);
         }
 
-        public static T Deserialize<T>(PrefixStyle prefixStyle, Schema schema, MemoryStream iostr, Decoder decoder)
+        public static T Deserialize<T>(PrefixStyle prefixStyle, Schema schema, Stream iostr, Decoder decoder)
         {
             return (T)Deserialize(prefixStyle, schema, iostr, decoder, typeof(T));
         }
 
-        public static object Deserialize(PrefixStyle prefixStyle, Schema schema, MemoryStream iostr, Decoder decoder, Type type)
+        public static object Deserialize(PrefixStyle prefixStyle, Schema schema, Stream iostr, Decoder decoder, Type type)
         {
             if (null == schema) throw new ArgumentNullException("schema", "schema cannot be null.");
             if (null == iostr) throw new ArgumentNullException("iostr", "iostr cannot be null.");

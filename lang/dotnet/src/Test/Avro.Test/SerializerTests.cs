@@ -15,7 +15,7 @@ namespace Avro.Test
         }
 
         Random random = new Random();
-        const int ITERATIONS = 1000;
+        const int ITERATIONS = 100000;
         [TestCase]
         public void IntTests()
         {
@@ -213,19 +213,35 @@ namespace Avro.Test
         [TestCase]
         public void RecordTest_Simple()
         {
-            RecordTest expected = new RecordTest();
-            expected.Test = "This is a test value";
+
 
             RecordSchema schema = new RecordSchema(new Name("RecordTest", null));
-            Field testField = new Field(new PrimitiveSchema("string"), "Test", false);
-            schema.AddField(testField);
+            Field testStringField = new Field(new PrimitiveSchema("string"), "TestString", false);
+            schema.AddField(testStringField);
+            Field TestInt32Field = new Field(new PrimitiveSchema("int"), "TestInt32", false);
+            schema.AddField(TestInt32Field);
+            Field TestInt64Field = new Field(new PrimitiveSchema("long"), "TestInt64", false);
+            schema.AddField(TestInt64Field);
 
-            
-
-            using (MemoryStream iostr = new MemoryStream())
+            for (int i = 0; i < ITERATIONS; i++)
             {
-                Serializer.Serialize(PrefixStyle.None, schema, iostr, BinaryEncoder.Instance, expected);
 
+                RecordTest expected = new RecordTest();
+                expected.TestString = RandomDataHelper.GetString(50, 500);
+                expected.TestInt32 = RandomDataHelper.GetRandomInt32();
+                expected.TestInt64 = RandomDataHelper.GetRandomInt64();
+
+                using (MemoryStream iostr = new MemoryStream())
+                {
+                    Serializer.Serialize(PrefixStyle.None, schema, iostr, BinaryEncoder.Instance, expected);
+                    Assert.Greater(iostr.Length, 0);
+                    iostr.Position = 0L;
+                    RecordTest actual = Serializer.Deserialize<RecordTest>(PrefixStyle.None, schema, iostr, BinaryDecoder.Instance);
+                    Assert.IsNotNull(actual);
+                    Assert.AreEqual(expected.TestString, actual.TestString);
+                    Assert.AreEqual(expected.TestInt32, actual.TestInt32);
+                    Assert.AreEqual(expected.TestInt64, actual.TestInt64);
+                }
             }
 
 
@@ -235,11 +251,12 @@ namespace Avro.Test
         public class RecordTest
         {
             [Field]
-            public string Test { get; set; }
+            public string TestString { get; set; }
+            [Field]
+            public int TestInt32 { get; set; }
+            [Field]
+            public long TestInt64 { get; set; }
         }
-
-
-
 
         [Category(MAPTESTING)]
         [TestCase]
