@@ -47,7 +47,7 @@ namespace Avro.Test
             }
         }
         [TestCase]
-        //[Ignore]
+        [Ignore]
         public void Array_Int32()
         {
             Schema schema = new ArraySchema(PrimitiveSchema.Int);
