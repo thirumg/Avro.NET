@@ -16,7 +16,6 @@
  * limitations under the License.
  */
 //#define TESTSERIALIZATION
-
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -366,6 +365,9 @@ namespace Avro
                     throw;
                 }
             }
+
+            
+   
             return recordLookup;
         }
 
@@ -377,7 +379,7 @@ namespace Avro
             validateArrayType(dataType);
             Type elementType = dataType.GetElementType();
 
-            MethodInfo valueEncodeMethod = getMethodInfo(MethodType.Decoder, schema.ItemSchema, elementType);
+            MethodInfo valueDecodeMethod = getMethodInfo(MethodType.Decoder, schema.ItemSchema, elementType);
             long hashCode = getHashCode(schema, dataType);
             string methodName = string.Format("DecodeArray{0}", hashCode);
 
@@ -387,6 +389,7 @@ namespace Avro
             LocalBuilder localLength = il.DeclareLocal(typeof(long));
             LocalBuilder localValues = il.DeclareLocal(dataType);
             LocalBuilder localI = il.DeclareLocal(typeof(long));
+            LocalBuilder localValue = il.DeclareLocal(elementType);
             LocalBuilder localTempHolder = il.DeclareLocal(dataType);
             LocalBuilder localFlag = il.DeclareLocal(typeof(bool));
             Label label0 = il.DefineLabel();
@@ -396,7 +399,7 @@ namespace Avro
             il.Emit(OpCodes.Nop);
             il.Emit(OpCodes.Ldarg_1);
             il.Emit(OpCodes.Ldarg_0);
-            il.Emit(OpCodes.Callvirt, DecoderHelper.ReadLong);
+            il.Emit(OpCodes.Callvirt, DecoderHelper.ReadArrayStart);
             il.Emit(OpCodes.Stloc_0);
             il.Emit(OpCodes.Ldloc_0);
             il.Emit(OpCodes.Conv_Ovf_I);
@@ -408,13 +411,16 @@ namespace Avro
             il.Emit(OpCodes.Br_S, label0);
             il.MarkLabel(label1);
             il.Emit(OpCodes.Nop);
-            il.Emit(OpCodes.Ldloc_1);
-            il.Emit(OpCodes.Ldloc_2);
-            il.Emit(OpCodes.Conv_Ovf_I);
             il.Emit(OpCodes.Ldarg_0);
             il.Emit(OpCodes.Ldarg_1);
-            il.Emit(OpCodes.Call, valueEncodeMethod);
-            il.Emit(OpCodes.Stelem_Ref);
+            il.Emit(OpCodes.Call, valueDecodeMethod);
+            il.Emit(OpCodes.Stloc_3);
+            il.Emit(OpCodes.Ldloc_1);
+            il.Emit(OpCodes.Ldloc_3);
+            il.Emit(OpCodes.Box, elementType);
+            il.Emit(OpCodes.Ldloc_2);
+            il.Emit(OpCodes.Callvirt, Array_SetValue);
+            il.Emit(OpCodes.Nop);
             il.Emit(OpCodes.Nop);
             il.Emit(OpCodes.Ldloc_2);
             il.Emit(OpCodes.Ldc_I4_1);
@@ -429,10 +435,10 @@ namespace Avro
             il.Emit(OpCodes.Ldloc_S, localFlag);
             il.Emit(OpCodes.Brtrue_S, label1);
             il.Emit(OpCodes.Ldloc_1);
-            il.Emit(OpCodes.Stloc_3);
+            il.Emit(OpCodes.Stloc_S, localTempHolder);
             il.Emit(OpCodes.Br_S, label2);
             il.MarkLabel(label2);
-            il.Emit(OpCodes.Ldloc_3);
+            il.Emit(OpCodes.Ldloc_S, localTempHolder);
             il.Emit(OpCodes.Ret);
 
             EmitHelperInstance.Save();
@@ -451,6 +457,7 @@ namespace Avro
         }
 
         private static readonly MethodInfo Array_GetLongLength = typeof(Array).GetMethod("get_LongLength");
+        private static readonly MethodInfo Array_SetValue = typeof(Array).GetMethod("SetValue", new Type[]{typeof(object), typeof(long)});
 
         private static MethodInfo generateArrayEncoder(ArraySchema schema, Type dataType)
         {
@@ -577,7 +584,8 @@ namespace Avro
             public static readonly MethodInfo ReadMapStart;
             public static readonly MethodInfo ReadString;
             public static readonly MethodInfo ReadLong;
-
+            public static readonly MethodInfo ReadArrayStart;
+            
             static DecoderHelper()
             {
                 const string PREFIX = "..ctor() - ";
@@ -586,12 +594,15 @@ namespace Avro
                 ReadMapStart = DecoderType.GetMethod("ReadMapStart");
                 ReadString = DecoderType.GetMethod("ReadString");
                 ReadLong = DecoderType.GetMethod("ReadLong");
+                ReadArrayStart = DecoderType.GetMethod("ReadArrayStart");
+
                 if (log.IsDebugEnabled)
                 {
                     log.DebugFormat(PREFIX + "DecoderType = {0}", DecoderType);
                     log.DebugFormat(PREFIX + "ReadMapStart = {0}", ReadMapStart);
                     log.DebugFormat(PREFIX + "ReadString = {0}", ReadString);
                     log.DebugFormat(PREFIX + "ReadLong = {0}", ReadLong);
+                    log.DebugFormat(PREFIX + "ReadArrayStart = {0}", ReadArrayStart);
                 }
             }
 
@@ -692,7 +703,7 @@ namespace Avro
         {
             private static readonly Logger log = new Logger();
 
-#if(DEBUG)
+#if(TESTSERIALIZATION)
             private AssemblyName _AssemblyName;
             private AssemblyBuilder _AssemblyBuilder;
             private ModuleBuilder _ModuleBuilder;
@@ -701,7 +712,7 @@ namespace Avro
 
             public EmitHelper()
             {
-#if(DEBUG)
+#if(TESTSERIALIZATION)
                 _AssemblyName = new AssemblyName("TestAssembly");
                 _AssemblyBuilder = AppDomain.CurrentDomain.DefineDynamicAssembly(_AssemblyName, AssemblyBuilderAccess.RunAndSave);
                 _ModuleBuilder = _AssemblyBuilder.DefineDynamicModule(_AssemblyName.Name + ".dll");
@@ -1059,20 +1070,11 @@ namespace Avro
         public static void Serialize(PrefixStyle style, Schema schema, Stream iostr, Encoder encoder, object data)
         {
             if (null == schema) throw new ArgumentNullException("schema", "schema cannot be null.");
-            if (null == iostr) throw new ArgumentNullException("iostr", "iostr cannot be null.");
+            if (null == iostr) throw new ArgumentNullException("stream", "stream cannot be null.");
             Type dataType = data.GetType();
 
             MethodInfo proxy = getMethodInfo(MethodType.Encoder, schema, dataType);
             proxy.Invoke(null, new object[]{iostr, encoder, data});
-        }
-
-        public static void TestEncodeString(Stream iostr, Encoder encoder, string data)
-        {
-            encoder.WriteString(iostr, data);
-        }
-        public static string TestDecodeString(Stream iostr, Decoder decoder)
-        {
-            return decoder.ReadString(iostr);
         }
 
         public static T Deserialize<T>(PrefixStyle prefixStyle, Schema schema, Stream iostr, Decoder decoder)
@@ -1080,18 +1082,35 @@ namespace Avro
             return (T)Deserialize(prefixStyle, schema, iostr, decoder, typeof(T));
         }
 
+
+
         public static object Deserialize(PrefixStyle prefixStyle, Schema schema, Stream iostr, Decoder decoder, Type type)
         {
             if (null == schema) throw new ArgumentNullException("schema", "schema cannot be null.");
-            if (null == iostr) throw new ArgumentNullException("iostr", "iostr cannot be null.");
+            if (null == iostr) throw new ArgumentNullException("stream", "stream cannot be null.");
 
-            //return TestDecodeMap(iostr, decoder);
+            //return test(iostr, decoder);
 
             MethodInfo proxy = getMethodInfo(MethodType.Decoder, schema, type);
-            
             object value = proxy.Invoke(null, new object[] { iostr, decoder });
-
             return value;
+        }
+
+        public static long DecodePrimitiveInt64(Stream stream1, Decoder decoder1)
+        {
+            return decoder1.ReadLong(stream1);
+        }
+
+        private static long[] test(Stream iostr, Decoder decoder)
+        {
+            long length = decoder.ReadArrayStart(iostr);
+            long[] values = new long[length];
+            for (long i = 0; i < length; i++)
+            {
+                long value = DecodePrimitiveInt64(iostr, decoder);
+                values.SetValue(value, i);
+            }
+            return values;
         }
     }
 }

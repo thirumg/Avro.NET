@@ -245,7 +245,7 @@ namespace Avro
 
         public long ReadMapStart(Stream Stream)
         {
-            return ReadLong(Stream);
+            return doReadItemCount(Stream);
         }
 
         public string ReadString(Stream Stream)
@@ -256,5 +256,11 @@ namespace Avro
             ReadFixed(Stream, buffer);
             return System.Text.Encoding.UTF8.GetString(buffer);
         }
+
+        public long ReadArrayStart(Stream stream)
+        {
+            return doReadItemCount(stream);
+        }
+
     }
 }

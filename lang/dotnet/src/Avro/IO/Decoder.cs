@@ -40,6 +40,7 @@ namespace Avro.IO
         void SkipLong(Stream Stream);
         void SkipNull(Stream Stream);
         void SkipString(Stream Stream);
+        long ReadArrayStart(Stream iostr);
     }
 
 

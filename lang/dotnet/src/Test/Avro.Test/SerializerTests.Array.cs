@@ -46,8 +46,8 @@ namespace Avro.Test
                     Assert.AreEqual(expected[i], actual[i], "Index {0} does not match", i);
             }
         }
+
         [TestCase]
-        [Ignore]
         public void Array_Int32()
         {
             Schema schema = new ArraySchema(PrimitiveSchema.Int);
@@ -72,7 +72,6 @@ namespace Avro.Test
             }
         }
         [TestCase]
-        [Ignore]
         public void Array_Int64()
         {
             Schema schema = new ArraySchema(PrimitiveSchema.Long);
@@ -94,7 +93,6 @@ namespace Avro.Test
             }
         }
         [TestCase]
-        [Ignore]
         public void Array_Float()
         {
             Schema schema = new ArraySchema(PrimitiveSchema.Float);

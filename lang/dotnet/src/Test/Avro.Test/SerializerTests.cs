@@ -32,7 +32,7 @@ namespace Avro.Test
         }
 
         
-        const int ITERATIONS = 1000;
+        const int ITERATIONS = 10;
 
 
 
