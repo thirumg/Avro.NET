@@ -160,6 +160,18 @@ namespace Avro
             return proxy;
         }
 
+        class ArrayHelper<T>
+        {
+            public static void SetValue(T[] values, long index, T value)
+            {
+                values[index] = value;
+            }
+            public static T GetValue(T[] values, long index)
+            {
+                return values[index];
+            }
+        }
+
         private static MethodInfo generateMethodInfo(MethodType methodType, Schema schema, Type dataType)
         {
             if (schema is PrimitiveSchema)
@@ -269,15 +281,7 @@ namespace Avro
             }
 
             il.Emit(OpCodes.Ldloc_0);
-            il.Emit(OpCodes.Ret);
-
-
-
-
-
-
-            EmitHelperInstance.Save();
-            
+            il.Emit(OpCodes.Ret);            
             return method;
         }
 
@@ -322,7 +326,7 @@ namespace Avro
             }
             il.Emit(OpCodes.Ret);
 
-            EmitHelperInstance.Save();
+            //EmitHelperInstance.Save();
 
             return method;
         }
@@ -379,6 +383,7 @@ namespace Avro
             validateArrayType(dataType);
             Type elementType = dataType.GetElementType();
 
+            MethodInfo setArrayValueMethod = getArraySetValue(elementType);
             MethodInfo valueDecodeMethod = getMethodInfo(MethodType.Decoder, schema.ItemSchema, elementType);
             long hashCode = getHashCode(schema, dataType);
             string methodName = string.Format("DecodeArray{0}", hashCode);
@@ -416,10 +421,9 @@ namespace Avro
             il.Emit(OpCodes.Call, valueDecodeMethod);
             il.Emit(OpCodes.Stloc_3);
             il.Emit(OpCodes.Ldloc_1);
-            il.Emit(OpCodes.Ldloc_3);
-            il.Emit(OpCodes.Box, elementType);
             il.Emit(OpCodes.Ldloc_2);
-            il.Emit(OpCodes.Callvirt, Array_SetValue);
+            il.Emit(OpCodes.Ldloc_3);
+            il.Emit(OpCodes.Call, setArrayValueMethod);
             il.Emit(OpCodes.Nop);
             il.Emit(OpCodes.Nop);
             il.Emit(OpCodes.Ldloc_2);
@@ -441,7 +445,7 @@ namespace Avro
             il.Emit(OpCodes.Ldloc_S, localTempHolder);
             il.Emit(OpCodes.Ret);
 
-            EmitHelperInstance.Save();
+            //EmitHelperInstance.Save();
 
             return method;
         }
@@ -452,8 +456,6 @@ namespace Avro
         {
             if (!type.IsArray)
                 throw new NotSupportedException(type + " is not supported for array serialization / deserialization");
-
-
         }
 
         private static readonly MethodInfo Array_GetLongLength = typeof(Array).GetMethod("get_LongLength");
@@ -478,10 +480,11 @@ namespace Avro
             ILGenerator il = null;
             MethodInfo method = EmitHelperInstance.CreateMethod(methodName, null, args, out il);
             LocalBuilder localI = il.DeclareLocal(typeof(long));
+            LocalBuilder localValue = il.DeclareLocal(elementType);
             LocalBuilder localFlag = il.DeclareLocal(typeof(bool));
             Label label0 = il.DefineLabel();
             Label label1 = il.DefineLabel();
-
+            MethodInfo getValueMethod = getArrayGetValue(elementType);
             il.Emit(OpCodes.Nop);
             il.Emit(OpCodes.Ldarg_1);
             il.Emit(OpCodes.Ldarg_0);
@@ -491,20 +494,23 @@ namespace Avro
             il.Emit(OpCodes.Ldarg_0);
             il.Emit(OpCodes.Ldarg_2);
             il.Emit(OpCodes.Callvirt, Array_GetLongLength);
-            il.Emit(OpCodes.Callvirt, EncoderHelper.WriteLong);
+            il.Emit(OpCodes.Callvirt, EncoderHelper.SetItemCount);
             il.Emit(OpCodes.Nop);
             il.Emit(OpCodes.Ldc_I4_0);
             il.Emit(OpCodes.Conv_I8);
             il.Emit(OpCodes.Stloc_0);
             il.Emit(OpCodes.Br_S, label1);
             il.MarkLabel(label0);
-            il.Emit(OpCodes.Ldarg_0);
-            il.Emit(OpCodes.Ldarg_1);
+            il.Emit(OpCodes.Nop);
             il.Emit(OpCodes.Ldarg_2);
             il.Emit(OpCodes.Ldloc_0);
-            il.Emit(OpCodes.Conv_Ovf_I);
-            il.Emit(OpCodes.Ldelem_Ref);
+            il.Emit(OpCodes.Call, getValueMethod);
+            il.Emit(OpCodes.Stloc_1);
+            il.Emit(OpCodes.Ldarg_0);
+            il.Emit(OpCodes.Ldarg_1);
+            il.Emit(OpCodes.Ldloc_1);
             il.Emit(OpCodes.Call, valueEncodeMethod);
+            il.Emit(OpCodes.Nop);
             il.Emit(OpCodes.Nop);
             il.Emit(OpCodes.Ldloc_0);
             il.Emit(OpCodes.Ldc_I4_1);
@@ -516,8 +522,8 @@ namespace Avro
             il.Emit(OpCodes.Ldarg_2);
             il.Emit(OpCodes.Callvirt, Array_GetLongLength);
             il.Emit(OpCodes.Clt);
-            il.Emit(OpCodes.Stloc_1);
-            il.Emit(OpCodes.Ldloc_1);
+            il.Emit(OpCodes.Stloc_2);
+            il.Emit(OpCodes.Ldloc_2);
             il.Emit(OpCodes.Brtrue_S, label0);
             il.Emit(OpCodes.Ldarg_1);
             il.Emit(OpCodes.Ldarg_0);
@@ -528,7 +534,7 @@ namespace Avro
 
 
 
-            EmitHelperInstance.Save();
+            //EmitHelperInstance.Save();
 
             return method;
         }
@@ -840,7 +846,7 @@ namespace Avro
             il.Emit(OpCodes.Ldloc_1);
             il.Emit(OpCodes.Ret);
 
-            EmitHelperInstance.Save();
+            //EmitHelperInstance.Save();
 
             return method;
         }
@@ -1074,6 +1080,9 @@ namespace Avro
             Type dataType = data.GetType();
 
             MethodInfo proxy = getMethodInfo(MethodType.Encoder, schema, dataType);
+
+            EmitHelperInstance.Save();
+
             proxy.Invoke(null, new object[]{iostr, encoder, data});
         }
 
@@ -1081,6 +1090,25 @@ namespace Avro
         {
             return (T)Deserialize(prefixStyle, schema, iostr, decoder, typeof(T));
         }
+        
+        /// <summary>
+        /// This method is used to ensure that the serializers for a type 
+        /// and schema are already generated. 
+        /// </summary>
+        /// <param name="type"></param>
+        /// <param name="schema"></param>
+        public static void EnsureType(Type type, Schema schema)
+        {
+            const string PREFIX = "EnsureType(Type, Schema) - ";
+            if (log.IsDebugEnabled) log.DebugFormat(PREFIX + "Generating serializers for type = {0}", type);
+            MethodInfo encoderMethod = getMethodInfo(MethodType.Encoder, schema, type);
+            if (log.IsDebugEnabled) log.DebugFormat(PREFIX + "Encoder Method = {0}", encoderMethod);
+            MethodInfo decoderMethod = getMethodInfo(MethodType.Decoder, schema, type);
+            if (log.IsDebugEnabled) log.DebugFormat(PREFIX + "Decoder Method = {0}", decoderMethod);
+            EmitHelperInstance.Save();
+        }
+
+
 
 
 
@@ -1089,9 +1117,11 @@ namespace Avro
             if (null == schema) throw new ArgumentNullException("schema", "schema cannot be null.");
             if (null == iostr) throw new ArgumentNullException("stream", "stream cannot be null.");
 
-            //return test(iostr, decoder);
+            //return TestDecodeInt64Array(iostr, decoder);
 
             MethodInfo proxy = getMethodInfo(MethodType.Decoder, schema, type);
+
+            EmitHelperInstance.Save();
             object value = proxy.Invoke(null, new object[] { iostr, decoder });
             return value;
         }
@@ -1101,16 +1131,34 @@ namespace Avro
             return decoder1.ReadLong(stream1);
         }
 
-        private static long[] test(Stream iostr, Decoder decoder)
+        public static long[] TestDecodeInt64Array(Stream iostr, Decoder decoder)
         {
-            long length = decoder.ReadArrayStart(iostr);
-            long[] values = new long[length];
-            for (long i = 0; i < length; i++)
+            long count = decoder.ReadArrayStart(iostr);
+            long[] values = new long[count];
+            for (long i = 0; i < count; i++)
             {
                 long value = DecodePrimitiveInt64(iostr, decoder);
-                values.SetValue(value, i);
+                ArrayHelper<long>.SetValue(values, i, value);
+
             }
             return values;
+        }
+
+        private static MethodInfo getArraySetValue(Type elementType)
+        {
+            const string PREFIX = "getArraySetValue(Type) - ";
+            if (log.IsDebugEnabled) log.DebugFormat(PREFIX + "dataType = \"{0}\"", elementType);
+            Type arrayHelperType = TypeHelper.CreateGenericType(typeof(ArrayHelper<>), elementType);
+            MethodInfo method = arrayHelperType.GetMethod("SetValue");
+            return method;
+        }
+        private static MethodInfo getArrayGetValue(Type elementType)
+        {
+            const string PREFIX = "getArrayGetValue(Type) - ";
+            if (log.IsDebugEnabled) log.DebugFormat(PREFIX + "dataType = \"{0}\"", elementType);
+            Type arrayHelperType = TypeHelper.CreateGenericType(typeof(ArrayHelper<>), elementType);
+            MethodInfo method = arrayHelperType.GetMethod("GetValue");
+            return method;
         }
     }
 }

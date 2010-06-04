@@ -51,6 +51,8 @@ namespace Avro.Test
         public void Array_Int32()
         {
             Schema schema = new ArraySchema(PrimitiveSchema.Int);
+            Serializer.EnsureType(typeof(int[]), schema);
+            
             int[] expected = new int[ITERATIONS];
             for (int i = 0; i < expected.Length; i++)
             {
@@ -75,6 +77,7 @@ namespace Avro.Test
         public void Array_Int64()
         {
             Schema schema = new ArraySchema(PrimitiveSchema.Long);
+            Serializer.EnsureType(typeof(long[]), schema);
             long[] expected = new long[ITERATIONS];
             for (int i = 0; i < expected.Length; i++)
                 expected[i] = RandomDataHelper.GetRandomInt32();
@@ -83,6 +86,7 @@ namespace Avro.Test
             {
                 Serializer.Serialize(PrefixStyle.None, schema, iostr, BinaryEncoder.Instance, expected);
                 Assert.Greater(iostr.Length, 0);
+                iostr.Flush();
                 iostr.Position = 0L;
                 long[] actual = Serializer.Deserialize<long[]>(PrefixStyle.None, schema, iostr, BinaryDecoder.Instance);
                 Assert.IsNotNull(actual);
@@ -96,6 +100,7 @@ namespace Avro.Test
         public void Array_Float()
         {
             Schema schema = new ArraySchema(PrimitiveSchema.Float);
+            Serializer.EnsureType(typeof(float[]), schema);
             float[] expected = new float[ITERATIONS];
             for (int i = 0; i < expected.Length; i++)
                 expected[i] = RandomDataHelper.GetRandomInt32();

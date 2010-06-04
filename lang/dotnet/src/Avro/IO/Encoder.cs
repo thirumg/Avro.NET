@@ -27,7 +27,7 @@ namespace Avro.IO
         void WriteArrayEnd(Stream iostr);
 
         void WriteMapStart(Stream iostr);
-        void SetItemCount(Stream iostr, int value);
+        void SetItemCount(Stream iostr, long value);
         void StartItem(Stream iostr);
         void WriteString(Stream iostr, string value);
         void WriteBytes(Stream iostr, byte[] value);

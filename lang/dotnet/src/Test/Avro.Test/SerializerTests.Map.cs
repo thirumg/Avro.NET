@@ -40,8 +40,7 @@ namespace Avro.Test
                 expected.Add(key, value);
             }
 
-            Schema valueSchema = new PrimitiveSchema("string");
-            MapSchema mapSchema = new MapSchema(valueSchema);
+            MapSchema mapSchema = new MapSchema(PrimitiveSchema.Boolean);
 
             using (MemoryStream iostr = new MemoryStream())
             {
@@ -74,7 +73,7 @@ namespace Avro.Test
                 expected.Add(key, value);
             }
 
-            Schema valueSchema = new PrimitiveSchema("string");
+            Schema valueSchema = new PrimitiveSchema("int");
             MapSchema mapSchema = new MapSchema(valueSchema);
 
             using (MemoryStream iostr = new MemoryStream())
@@ -108,7 +107,7 @@ namespace Avro.Test
                 expected.Add(key, value);
             }
 
-            Schema valueSchema = new PrimitiveSchema("string");
+            Schema valueSchema = new PrimitiveSchema("long");
             MapSchema mapSchema = new MapSchema(valueSchema);
 
             using (MemoryStream iostr = new MemoryStream())
@@ -142,7 +141,7 @@ namespace Avro.Test
                 expected.Add(key, value);
             }
 
-            Schema valueSchema = new PrimitiveSchema("string");
+            Schema valueSchema = new PrimitiveSchema("float");
             MapSchema mapSchema = new MapSchema(valueSchema);
 
             using (MemoryStream iostr = new MemoryStream())

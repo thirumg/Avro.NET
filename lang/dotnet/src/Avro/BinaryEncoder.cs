@@ -170,7 +170,7 @@ namespace Avro
 
         }
 
-        public void SetItemCount(Stream Stream, int value)
+        public void SetItemCount(Stream Stream, long value)
         {
             if (value > 0)
             {
