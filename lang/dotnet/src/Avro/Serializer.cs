@@ -29,7 +29,6 @@ namespace Avro
     {
         None=0,
         Schema=2,
-
     }
 
     public static class Serializer
@@ -303,7 +302,6 @@ namespace Avro
             private ModuleBuilder _ModuleBuilder;
             private TypeBuilder _TypeBuilder;
 #endif
-
             public EmitHelper()
             {
 #if(TESTSERIALIZATION)
@@ -343,11 +341,6 @@ namespace Avro
                 if (log.IsDebugEnabled) log.DebugFormat(PREFIX + "returning method {0}", method);
                 return method;
             }
-
-
-
-
-
 
             public void Save()
             {

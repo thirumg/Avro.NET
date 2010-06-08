@@ -131,8 +131,6 @@ namespace Avro.CodeGen
                     processSchema(ns, schema);
                 }
 
-
-             
                 CodeTypeReference protocolInterface = createProtocolInterface(protocol, ns);
                 createProtocolClient(protocol, ns, protocolInterface);
             }
@@ -183,14 +181,64 @@ namespace Avro.CodeGen
             _SchemaToCodeTypeReferenceLookup.Add(schema, new CodeTypeReference(typeof(byte[])));
         }
 
+        private bool findNullableType(UnionSchema schema, out CodeTypeReference type)
+        {
+            const string PREFIX = "findNullableType(UnionSchema, out Type) - ";
+
+            if(schema.Schemas.Count!=2)
+            {
+
+                type=null;
+                return false;
+            }
+
+            bool isnullable = false;
+            CodeTypeReference otherType = null;
+
+            foreach (Schema childSchema in schema.Schemas)
+            {
+                if (log.IsDebugEnabled) log.DebugFormat(PREFIX + "childSchema.Type = \"{0}\"", childSchema.Type);
+
+                if (PrimitiveSchema.Null.Equals(childSchema))
+                {
+                    isnullable = true;
+                }
+                else
+                {
+                    otherType = getCodeTypeReference(childSchema);
+                }
+            }
+
+            //TODO: Check if the type is an int, long, decimal, single
+
+            
+
+
+
+            type = otherType;
+            return isnullable;
+        }
+
+
+
         private void processUnion(Schema schema)
         {
             if (_SchemaToCodeTypeReferenceLookup.ContainsKey(schema))
                 return;
             UnionSchema unionSchema = schema as UnionSchema;
 
+            CodeTypeReference refNullable = null;
+            if (findNullableType(unionSchema, out refNullable))
+            {
+                _SchemaToCodeTypeReferenceLookup.Add(schema, refNullable);
+                return;
+            }
+
+
+
+            throw new NotImplementedException();
             //TODO: This is wrong
-            _SchemaToCodeTypeReferenceLookup.Add(schema, new CodeTypeReference(typeof(string)));
+            //_SchemaToCodeTypeReferenceLookup.Add(schema, new CodeTypeReference(typeof(string)));
             //unionSchema.
         }
 

@@ -61,6 +61,14 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <None Include="..\..\..\..\..\share\schemas\org\apache\avro\ipc\HandshakeRequest.avsc">
+      <Link>CodeGen\HandshakeRequest.avsc</Link>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Include="..\..\..\..\..\share\schemas\org\apache\avro\ipc\HandshakeResponse.avsc">
+      <Link>CodeGen\HandshakeResponse.avsc</Link>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
     <None Include="..\..\..\..\..\share\test\schemas\BulkData.avpr">
       <Link>CodeGen\BulkData.avpr</Link>
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
@@ -81,6 +89,7 @@
       <Link>CodeGen\WordCount.avsc</Link>
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
+    <None Include="CodeGen\namespaces.avpr" />
     <Compile Include="FixtureSetup.cs" />
     <Compile Include="SchemaTests.Primitive.cs" />
     <Compile Include="SerializerTests.Array.cs" />

@@ -55,18 +55,18 @@ namespace Avro.RPC
         private static readonly Schema MetadataSchema = new ArraySchema(PrimitiveSchema.Bytes);
         private static readonly IDictionary<string, byte[]> EmptyMetadata = new Dictionary<string, byte[]>();
 
-        public void Invoke(string name, IDictionary<string, byte[]> metadata, params Parameter[] parms)
+        public void Invoke(string name, params Parameter[] parms)
         {
-            IDictionary<string, byte[]> requestMetadata = (metadata == null ? EmptyMetadata : metadata);
+            //IDictionary<string, byte[]> requestMetadata = (metadata == null ? EmptyMetadata : metadata);
 
             
 
 
             throw new NotImplementedException();
         }
-        public Response<T> Invoke<T>(string name, IDictionary<string, byte[]> metadata, params Parameter[] parms)
+        public T Invoke<T>(string name, params Parameter[] parms)
         {
-            IDictionary<string, byte[]> requestMetadata = (metadata == null ? EmptyMetadata : metadata);
+            //IDictionary<string, byte[]> requestMetadata = (metadata == null ? EmptyMetadata : metadata);
 
             
 
@@ -95,15 +95,5 @@ namespace Avro.RPC
         {
             throw new NotImplementedException();
         }
-    }
-
-    public class Response
-    {
-        public IDictionary<string, byte[]> Metadata { get; set; }
-    }
-    
-    public class Response<T>:Response
-    {
-        public T Value { get; set; }
     }
 }

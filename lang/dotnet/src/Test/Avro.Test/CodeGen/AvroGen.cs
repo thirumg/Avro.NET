@@ -65,6 +65,65 @@ namespace Avro.Test.CodeGen
         }
 
         [TestCase]
+        public void HandshakeResponse_avsc()
+        {
+            const string PREFIX = "Simple_avpr() - ";
+            const string inputFile = "CodeGen/HandshakeResponse.avsc";
+            string outputFile = Path.GetFullPath(inputFile);
+            outputFile = Path.ChangeExtension(inputFile, ".cs");
+            Schema schema = loadSchemaFromFile(inputFile);
+
+            AvroGen generator = new AvroGen();
+            generator.Types.Add(schema);
+
+            CodeCompileUnit cu = generate(generator);
+
+            writeSource(outputFile, cu);
+
+            CompilerParameters parms = new CompilerParameters();
+            parms.ReferencedAssemblies.Add(typeof(Schema).Assembly.Location);
+            parms.ReferencedAssemblies.Add(typeof(System.CodeDom.Compiler.GeneratedCodeAttribute).Assembly.Location);
+            CompilerResults results = csp.CompileAssemblyFromDom(parms, cu);
+
+            foreach (CompilerError error in results.Errors)
+            {
+                if (log.IsErrorEnabled) log.ErrorFormat(PREFIX + "{0}", error);
+            }
+            Assert.IsTrue(results.Errors.Count == 0, "Errors were encountered.");
+
+        }
+        [TestCase]
+        public void HandshakeRequest_avsc()
+        {
+            const string PREFIX = "Simple_avpr() - ";
+            const string inputFile = "CodeGen/HandshakeRequest.avsc";
+            string outputFile = Path.GetFullPath(inputFile);
+            outputFile = Path.ChangeExtension(inputFile, ".cs");
+            Schema schema = loadSchemaFromFile(inputFile);
+
+            AvroGen generator = new AvroGen();
+            generator.Types.Add(schema);
+
+            CodeCompileUnit cu = generate(generator);
+
+            writeSource(outputFile, cu);
+
+            CompilerParameters parms = new CompilerParameters();
+            parms.ReferencedAssemblies.Add(typeof(Schema).Assembly.Location);
+            parms.ReferencedAssemblies.Add(typeof(System.CodeDom.Compiler.GeneratedCodeAttribute).Assembly.Location);
+            CompilerResults results = csp.CompileAssemblyFromDom(parms, cu);
+
+            foreach (CompilerError error in results.Errors)
+            {
+                if (log.IsErrorEnabled) log.ErrorFormat(PREFIX + "{0}", error);
+            }
+            Assert.IsTrue(results.Errors.Count == 0, "Errors were encountered.");
+
+        }
+
+
+
+        [TestCase]
         public void BulkData_avpr()
         {
             const string inputFile = "CodeGen/BulkData.avpr";
