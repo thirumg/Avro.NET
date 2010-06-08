@@ -9,7 +9,7 @@
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>Avro.Test</RootNamespace>
-    <AssemblyName>Avro.Test</AssemblyName>
+    <AssemblyName>avro.test</AssemblyName>
     <TargetFrameworkVersion>v2.0</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <TargetFrameworkSubset>
@@ -81,6 +81,8 @@
       <Link>CodeGen\WordCount.avsc</Link>
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
+    <Compile Include="FixtureSetup.cs" />
+    <Compile Include="SchemaTests.Primitive.cs" />
     <Compile Include="SerializerTests.Array.cs" />
     <Compile Include="SerializerTests.Map.cs" />
     <Compile Include="SerializerTests.Primitive.cs" />

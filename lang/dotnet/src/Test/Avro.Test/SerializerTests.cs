@@ -24,14 +24,7 @@ namespace Avro.Test
 {
     [TestFixture]
     public partial class SerializerTests
-    {
-        [TestFixtureSetUp]
-        public void Setup()
-        {
-            Logger.ConfigureForUnitTesting();
-        }
-
-        
+    {      
         const long ITERATIONS = 1000;
 
 

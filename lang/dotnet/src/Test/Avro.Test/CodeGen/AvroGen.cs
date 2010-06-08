@@ -29,7 +29,8 @@ namespace Avro.Test.CodeGen
     [TestFixture]
     public class AvroGenTests
     {
-
+        private static readonly Logger log = new Logger();
+        private Microsoft.CSharp.CSharpCodeProvider csp = new Microsoft.CSharp.CSharpCodeProvider();
 
         /// <summary>
         /// Testcase is used to load simple.avpr
@@ -37,6 +38,7 @@ namespace Avro.Test.CodeGen
         [TestCase]
         public void Simple_avpr()
         {
+            const string PREFIX = "Simple_avpr() - ";
             const string inputFile = "CodeGen/simple.avpr";
             string outputFile = Path.GetFullPath(inputFile);
             outputFile = Path.ChangeExtension(inputFile, ".cs");
@@ -49,6 +51,17 @@ namespace Avro.Test.CodeGen
 
             writeSource(outputFile, cu);
            
+            CompilerParameters parms = new CompilerParameters();
+            parms.ReferencedAssemblies.Add(typeof(Schema).Assembly.Location);
+            parms.ReferencedAssemblies.Add(typeof(System.CodeDom.Compiler.GeneratedCodeAttribute).Assembly.Location);
+            CompilerResults results = csp.CompileAssemblyFromDom(parms, cu);
+
+            foreach (CompilerError error in results.Errors)
+            {
+                if (log.IsErrorEnabled) log.ErrorFormat(PREFIX + "{0}", error);
+            }
+            Assert.IsTrue(results.Errors.Count == 0, "Errors were encountered.");
+
         }
 
         [TestCase]
@@ -81,10 +94,12 @@ namespace Avro.Test.CodeGen
             CodeCompileUnit cu = generate(generator);
 
             writeSource(outputFile, cu);
+
+            
+
         }
 
         [TestCase]
-        [Ignore]
         public void interop_avsc()
         {
             const string inputFile = "CodeGen/interop.avsc";
@@ -101,48 +116,20 @@ namespace Avro.Test.CodeGen
         }
 
         [TestCase]
-        public void GenerateDecoderInterface()
+        public void wordcount_avsc()
         {
-            Type decoderType = typeof(Avro.BinaryDecoder);
+            const string inputFile = "CodeGen/WordCount.avsc";
+            string outputFile = Path.GetFullPath(inputFile);
+            outputFile = Path.ChangeExtension(inputFile, ".cs");
+            Schema schema = loadSchemaFromFile(inputFile);
 
-            CodeTypeDeclaration typeDeclare = new CodeTypeDeclaration("Decoder");
-            typeDeclare.IsInterface = true;
-            typeDeclare.Attributes = MemberAttributes.Public;
+            AvroGen generator = new AvroGen();
+            generator.Types.Add(schema);
 
-            List<CodeMemberMethod> methods = new List<CodeMemberMethod>();
+            CodeCompileUnit cu = generate(generator);
 
-            foreach (System.Reflection.MethodInfo method in decoderType.GetMethods())
-            {
-                if (!method.Name.StartsWith("Read")&&!method.Name.StartsWith("Skip"))
-                    continue;
-
-                CodeMemberMethod genMethod = new CodeMemberMethod();
-                genMethod.Name = method.Name;
-                genMethod.ReturnType = new CodeTypeReference(method.ReturnType);
-
-                foreach (System.Reflection.ParameterInfo parameter in method.GetParameters())
-                {
-                    CodeParameterDeclarationExpression parm = new CodeParameterDeclarationExpression(parameter.ParameterType, parameter.Name);
-                    genMethod.Parameters.Add(parm);
-                }
-
-                methods.Add(genMethod);
-            }
-            methods.Sort(delegate(CodeMemberMethod a, CodeMemberMethod b) { return a.Name.CompareTo(b.Name); });
-            typeDeclare.Members.AddRange(methods.ToArray());
-            Microsoft.CSharp.CSharpCodeProvider csp = new Microsoft.CSharp.CSharpCodeProvider();
-            System.CodeDom.Compiler.CodeGeneratorOptions options = new CodeGeneratorOptions();
-            options.BracingStyle = "C";
-            options.BlankLinesBetweenMembers = false;
-            using (StringWriter writer = new StringWriter())
-            {
-                csp.GenerateCodeFromType(typeDeclare, writer, options);
-                Console.WriteLine(writer);
-            }
-
-
+            writeSource(outputFile, cu);
         }
-
 
         private static void writeSource(string outputFile, CodeCompileUnit cu)
         {
@@ -159,7 +146,7 @@ namespace Avro.Test.CodeGen
 
         private static CodeCompileUnit generate(AvroGen generator)
         {
-            CodeCompileUnit cu = generator.Generate();
+            CodeCompileUnit cu = generator.GenerateClient();
             Assert.IsNotNull(cu);
             Assert.IsTrue(cu.Namespaces.Count > 0, "Some namespaces should have been generated.");
             return cu;

@@ -21,7 +21,7 @@ using System.Text;
 
 namespace Avro
 {
-    public class PrimitiveSchema:Schema
+    public class PrimitiveSchema:Schema, IEquatable<Schema>
     {
         public static readonly Schema Null;
         public static readonly Schema Boolean;
@@ -93,5 +93,17 @@ namespace Avro
         }
 
 
+
+        
+
+        public bool Equals(Schema other)
+        {
+            if (null == other)
+                return false;
+            if (!(other is PrimitiveSchema))
+                return false;
+            PrimitiveSchema o = other as PrimitiveSchema;
+            return o.Type == this.Type;
+        }
     }
 }

@@ -27,9 +27,11 @@ namespace Avro.CodeGen
     public class AvroGen
     {
         private static readonly Logger log = new Logger();
-
         private static readonly Dictionary<string, CodeTypeReference> _PrimitiveLookup;
-
+        private static readonly CodeTypeReference AvroFieldAttribute = new CodeTypeReference(typeof(Avro.FieldAttribute));
+        private static readonly string TOOLNAME = typeof(AvroGen).FullName;
+        private static readonly string VERSION = "1.0";//TODO: Update to actually pull the assembly version
+        
         static AvroGen()
         {
             Dictionary<string, CodeTypeReference> primitiveLookup = new Dictionary<string, CodeTypeReference>();
@@ -45,25 +47,23 @@ namespace Avro.CodeGen
             _PrimitiveLookup = primitiveLookup;
         }
 
-
-
-
-
-        public IList<Schema> Types { get; private set; }
-        public IList<Protocol> Protocols { get; private set; }
-
         public AvroGen()
         {
             this.Types = new List<Schema>();
             this.Protocols = new List<Protocol>();
         }
 
+        public IList<Schema> Types { get; private set; }
+        public IList<Protocol> Protocols { get; private set; }
         private Dictionary<string, CodeNamespace> _NamespaceLookup = new Dictionary<string, CodeNamespace>(StringComparer.Ordinal);
         private CodeCompileUnit _CompileUnit;
         private Dictionary<Schema, CodeTypeReference> _SchemaToCodeTypeReferenceLookup = new Dictionary<Schema, CodeTypeReference>();
 
         private CodeNamespace addNamespace(string name)
         {
+            const string PREFIX = "addNamespace(string) - ";
+            if (log.IsDebugEnabled) log.DebugFormat(PREFIX + "name = \"{0}\"", name);
+
             if (string.IsNullOrEmpty(name)) 
                 throw new ArgumentNullException("name", "name cannot be null.");
             if (log.IsDebugEnabled) log.DebugFormat("addNamespace(string) - name = \"{0}\"", name);
@@ -78,16 +78,20 @@ namespace Avro.CodeGen
             return ns;
         }
 
-        public CodeCompileUnit Generate()
+        public CodeCompileUnit GenerateClient()
         {
             _CompileUnit = new CodeCompileUnit();
 
             processTypes();
             
-            processProtocols();
-
+            processClientProtocols();
 
             return _CompileUnit;
+        }
+
+        public CodeCompileUnit GenerateServer()
+        {
+            throw new NotImplementedException();
         }
 
         private void processTypes()
@@ -106,15 +110,11 @@ namespace Avro.CodeGen
                     }
                 }
 
-
-
                 processSchema(ns, schema);
             }
         }
 
-
-
-        private void processProtocols()
+        private void processClientProtocols()
         {
             foreach (Protocol protocol in Protocols)
             {
@@ -203,14 +203,8 @@ namespace Avro.CodeGen
 
             CodeTypeReference typeRef = new CodeTypeReference("System.Collections.Dictionary");
             typeRef.TypeArguments.Add(new CodeTypeReference(typeof(string)));
-            typeRef.TypeArguments.Add(new CodeTypeReference(typeof(string)));
-
-            //CodeTypeReference valueType = getCodeTypeReference(mapSchema.Values);
-
-
-
-//            typeRef.TypeArguments.Add(valueType);
-
+            CodeTypeReference valueRef = getCodeTypeReference(mapSchema.ValueSchema);
+            typeRef.TypeArguments.Add(valueRef);
             _SchemaToCodeTypeReferenceLookup.Add(schema, typeRef);
         }
 
@@ -220,9 +214,6 @@ namespace Avro.CodeGen
                 return;
 
             ArraySchema arraySchema = schema as ArraySchema;
-
-
-
 
             CodeTypeReference arrayItemRef = getCodeTypeReference(arraySchema.ItemSchema);
 
@@ -246,7 +237,7 @@ namespace Avro.CodeGen
 
             _SchemaToCodeTypeReferenceLookup.Add(schema, refRecord);
 
-            CodeTypeDeclaration recordDeclare = new CodeTypeDeclaration(refRecord.BaseType);
+            CodeTypeDeclaration recordDeclare = createCodeTypeDeclaration(refRecord.BaseType);
             recordDeclare.Attributes = MemberAttributes.Public;
             recordDeclare.IsClass = true;
             recordDeclare.IsPartial = true;
@@ -275,8 +266,6 @@ namespace Avro.CodeGen
                 }
 
                 CodeCommentStatement propertyComment = string.IsNullOrEmpty(field.Documentation) ? null : createDocComment(field.Documentation);
-
-
                 string privFieldName = string.Concat("_", field.Name);
                 CodeFieldReferenceExpression fieldRef = new CodeFieldReferenceExpression(new CodeThisReferenceExpression(), privFieldName);
                 CodeMemberField codeField = new CodeMemberField(fieldType, fieldRef.FieldName);
@@ -290,6 +279,7 @@ namespace Avro.CodeGen
                 property.Attributes = MemberAttributes.Public|MemberAttributes.Final;
                 property.Name = field.Name;
                 property.Type = fieldType;
+                addFieldAttribute(field, property);
                 property.GetStatements.Add(new CodeMethodReturnStatement(fieldRef));
                 property.SetStatements.Add(new CodeAssignStatement(fieldRef, new CodePropertySetValueReferenceExpression()));
                 if (null != propertyComment)
@@ -304,19 +294,43 @@ namespace Avro.CodeGen
             return recordDeclare;
         }
 
+        private void addFieldAttribute(Field field, CodeMemberProperty property)
+        {
+            CodeAttributeDeclaration declare = new CodeAttributeDeclaration(AvroFieldAttribute);
+            declare.Arguments.Add(new CodeAttributeArgument("Name", new CodePrimitiveExpression(field.Name)));
+            property.CustomAttributes.Add(declare);
+        }
+
+        private static CodeTypeDeclaration createCodeTypeDeclaration(string name)
+        {
+            const string PREFIX = "createCodeTypeDeclaration(string) - ";
+            if (log.IsDebugEnabled) log.DebugFormat(PREFIX + "name = \"{0}\"", name);
+            if (string.IsNullOrEmpty(name)) throw new ArgumentNullException("name", "name cannot be null.");
+
+            CodeTypeDeclaration typedeclare = new CodeTypeDeclaration(name);
+            CodeAttributeDeclaration toolAttribute = new CodeAttributeDeclaration(new CodeTypeReference(typeof(System.CodeDom.Compiler.GeneratedCodeAttribute)));
+            toolAttribute.Arguments.Add(new CodeAttributeArgument(new CodePrimitiveExpression(TOOLNAME)));
+            toolAttribute.Arguments.Add(new CodeAttributeArgument(new CodePrimitiveExpression(VERSION)));
+            typedeclare.CustomAttributes.Add(toolAttribute);
+            return typedeclare;
+        }
+
         private void processEnum(Schema schema, CodeNamespace ns)
         {
             EnumSchema enumschema = schema as EnumSchema;
             //TODO: This looks wrong. Double check is an enum schema a named schema? If so use the namespace if no namespace is provided. 
             if(null==enumschema) throw new NotSupportedException();
             CodeTypeReference refEnum = new CodeTypeReference(enumschema.Name.full);
-            CodeTypeDeclaration typeEnum = new CodeTypeDeclaration(refEnum.BaseType);
+            CodeTypeDeclaration typeEnum = createCodeTypeDeclaration(refEnum.BaseType);
+            typeEnum.BaseTypes.Add(typeof(int));
             typeEnum.IsEnum = true;
             typeEnum.Attributes = MemberAttributes.Public;
 
+            int index = 0;
             foreach (string symbol in enumschema.Symbols)
             {
                 CodeMemberField field = new CodeMemberField(typeof(int), symbol);
+                field.InitExpression = new CodePrimitiveExpression(index++);
                 typeEnum.Members.Add(field);
             }
 
@@ -339,7 +353,7 @@ namespace Avro.CodeGen
         private void createProtocolClient(Protocol protocol, CodeNamespace ns, CodeTypeReference protocolInterface)
         {
             string clientName = string.Concat(protocol.Name, "Client");
-            CodeTypeDeclaration typeClient = new CodeTypeDeclaration(clientName);
+            CodeTypeDeclaration typeClient = createCodeTypeDeclaration(clientName);
             typeClient.IsClass = true;
             typeClient.IsPartial = true;
             typeClient.Attributes = MemberAttributes.Public;
@@ -347,6 +361,53 @@ namespace Avro.CodeGen
             typeClient.BaseTypes.Add(protocolInterface);
             ns.Types.Add(typeClient);
 
+            foreach (Message message in protocol.Messages)
+            {
+                CodeMemberMethod methodMessage = new CodeMemberMethod();
+                typeClient.Members.Add(methodMessage);
+                methodMessage.Name = message.Name;
+                methodMessage.Attributes = MemberAttributes.Public | MemberAttributes.Final;
+                if (!(message.Response == null||message.Response == PrimitiveSchema.Null))
+                    methodMessage.ReturnType = getCodeTypeReference(message.Response);
+                if (!string.IsNullOrEmpty(message.Doc))
+                    methodMessage.Comments.Add(createDocComment(message.Doc));
+
+                List<CodeExpression> invokeParameters = new List<CodeExpression>();
+                invokeParameters.Add(new CodePrimitiveExpression(message.Name));
+                invokeParameters.Add(new CodePrimitiveExpression(null));
+                foreach (Message.Parameter messageParm in message.Request)
+                {
+                    CodeVariableReferenceExpression varParm = new CodeVariableReferenceExpression(messageParm.Name);
+                    CodeTypeReference messageTypeRef = getCodeTypeReference(messageParm.Schema);
+                    CodeParameterDeclarationExpression decParm = new CodeParameterDeclarationExpression(messageTypeRef, messageParm.Name);
+                    methodMessage.Parameters.Add(decParm);
+
+                    CodeTypeReference refParameter = new CodeTypeReference(typeof(Avro.RPC.Parameter<>));
+                    refParameter.TypeArguments.Add(messageTypeRef);
+
+                    CodeObjectCreateExpression createparm = new CodeObjectCreateExpression(refParameter, new CodePrimitiveExpression(null), varParm);
+                    invokeParameters.Add(createparm);
+                }
+
+                CodeMethodInvokeExpression callInvoke = new CodeMethodInvokeExpression(new CodeBaseReferenceExpression(), "Invoke", invokeParameters.ToArray());
+
+                if ((message.Response == null || PrimitiveSchema.Null.Equals(message.Response)))
+                {
+                    methodMessage.Statements.Add(callInvoke);
+                }
+                else
+                {
+                    callInvoke.Method.TypeArguments.Add(methodMessage.ReturnType);
+                    methodMessage.Statements.Add(new CodeMethodReturnStatement(callInvoke));
+                    
+                }
+
+
+
+
+                methodMessage.Statements.Add(new CodeThrowExceptionStatement( new CodeObjectCreateExpression( typeof(NotImplementedException))));
+
+            }
         }
 
         private CodeCommentStatement createDocComment(string comment)
@@ -354,16 +415,11 @@ namespace Avro.CodeGen
             string text = string.Format("<summary>\r\n {0}\r\n </summary>", comment);
             return new CodeCommentStatement(text, true);
         }
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="protocol"></param>
-        /// <param name="ns"></param>
-
+  
         private CodeTypeReference createProtocolInterface(Protocol protocol, CodeNamespace ns)
         {
             CodeTypeReference typeRef = new CodeTypeReference(protocol.Name);
-            CodeTypeDeclaration typeInterface = new CodeTypeDeclaration(typeRef.BaseType);
+            CodeTypeDeclaration typeInterface = createCodeTypeDeclaration(typeRef.BaseType);
             typeInterface.IsInterface = true;
             typeInterface.Attributes = MemberAttributes.Public;
             ns.Types.Add(typeInterface);

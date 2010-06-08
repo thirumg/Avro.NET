@@ -40,26 +40,6 @@ using Newtonsoft.Json.Linq;
 
 namespace Avro
 {
-    //public enum SchemaType
-    //{
-    //    Null,
-    //    Boolean,
-    //    String,
-    //    Bytes,
-    //    Int,
-    //    Long,
-    //    Float,
-    //    Double,
-    //    Fixed,
-    //    Enum,
-    //    Record,
-    //    Error,
-    //    Array,
-    //    Map,
-    //    Union,
-    //    Request
-    //}
-
     public class Schema
     {
 

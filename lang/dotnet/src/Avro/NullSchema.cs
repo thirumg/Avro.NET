@@ -23,6 +23,9 @@ namespace Avro
 {
     public class NullSchema:Schema
     {
+
+
+
         public NullSchema()
             : base("null")
         {
