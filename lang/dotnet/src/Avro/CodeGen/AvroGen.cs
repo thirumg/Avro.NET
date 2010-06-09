@@ -249,7 +249,7 @@ namespace Avro.CodeGen
 
             MapSchema mapSchema = schema as MapSchema;
 
-            CodeTypeReference typeRef = new CodeTypeReference("System.Collections.Dictionary");
+            CodeTypeReference typeRef = new CodeTypeReference(typeof(IDictionary<,>));
             typeRef.TypeArguments.Add(new CodeTypeReference(typeof(string)));
             CodeTypeReference valueRef = getCodeTypeReference(mapSchema.ValueSchema);
             typeRef.TypeArguments.Add(valueRef);
@@ -504,8 +504,12 @@ namespace Avro.CodeGen
 
             if (!_SchemaToCodeTypeReferenceLookup.TryGetValue(schema, out typeref))
             {
-                //processSchema(null, schema);
-                //typeref = new CodeTypeReference(typeof(string));
+                processSchema(null, schema);
+
+                if (!_SchemaToCodeTypeReferenceLookup.TryGetValue(schema, out typeref))
+                {
+                    throw new Exception("Could not determine type for " + schema);
+                }
             }
             return typeref;
         }
