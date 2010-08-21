@@ -24,11 +24,11 @@ namespace Avro
 {
     public class RecordSchema : NamedSchema
     {
-        public IDictionary<string, Field> Fields;
+        public readonly IDictionary<string, Field> Fields;
 
-        private IDictionary<string, Field> _fieldLookup;
+        private readonly IDictionary<string, Field> _fieldLookup;
 
-        public static RecordSchema NewInstance(Type type, JToken j, Names names)
+        internal static RecordSchema NewInstance(Type type, JToken j, Names names)
         {
             JToken jfields = j["fields"];
 
@@ -43,19 +43,22 @@ namespace Avro
 
             Name name = GetName(j);
             IDictionary<string, Field> fields = new Dictionary<string, Field>();
+            RecordSchema result = new RecordSchema(type, name, fields, names);
             foreach (JObject jfield in jfields)
             {
                 string fieldName = JsonHelper.GetRequiredString(jfield, "name");
                 Field field = createField(jfield, names);
                 fields.Add(fieldName, field);
             }
-            return new RecordSchema(type, name, fields);
+            return result;
         }
 
         private static Field createField(JToken jfield, Names names)
         {
             string name = JsonHelper.GetRequiredString(jfield, "name");
             string doc = JsonHelper.GetOptionalString(jfield, "doc");
+
+            string defaultValue = JsonHelper.GetOptionalString(jfield, "default");
 
             JToken jtype = jfield["type"];
             if (null == jtype)
@@ -64,11 +67,11 @@ namespace Avro
             }
             Schema type = Schema.ParseJson(jtype, names);
 
-            return new Field(type, name, false);
+            return new Field(type, name, defaultValue);
         }
 
-        private RecordSchema(Type type, Name name, IDictionary<string, Field> fields)
-            : base(type, name) {
+        private RecordSchema(Type type, Name name, IDictionary<string, Field> fields, Names names)
+            : base(type, name, names) {
             this.Fields = fields;
         }
 

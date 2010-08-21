@@ -40,19 +40,13 @@ namespace Avro
                 string value = child.ToString();
                 return value.Trim('\"');
             }
-            else
-            {
-                throw new SchemaParseException("Field " + field + " is not a string");
-            }
+            throw new SchemaParseException("Field " + field + " is not a string");
         }
 
         public static string GetRequiredString(JToken j, string property)
         {
             string value = GetOptionalString(j, property);
-            if (string.IsNullOrEmpty(value))
-            {
-                throw new SchemaParseException(string.Format("No \"{0}\" JSON field: {1}", property, j));
-            }
+            if (string.IsNullOrEmpty(value)) throw new SchemaParseException(string.Format("No \"{0}\" JSON field: {1}", property, j));
             return value;
         }
 
@@ -60,33 +54,20 @@ namespace Avro
         {
             ensureValidFieldName(field);
             JToken child = j[field];
-            if (null == child)
-            {
-                throw new SchemaParseException(string.Format("No \"{0}\" JSON field: {1}", field, j));
-            }
+            if (null == child) throw new SchemaParseException(string.Format("No \"{0}\" JSON field: {1}", field, j));
 
-            if (child.Type == JTokenType.Integer)
-            {
-                return (int) child;
-            }
-            else
-            {
-                throw new SchemaParseException("Field " + field + " is not an integer");
-            }
+            if (child.Type == JTokenType.Integer) return (int) child;
+            throw new SchemaParseException("Field " + field + " is not an integer");
         }
 
         private static void ensureValidFieldName(string name)
         {
-            if (string.IsNullOrEmpty(name))
-            {
-                throw new ArgumentNullException("Field name cannot be null");
-            }
+            if (string.IsNullOrEmpty(name)) throw new ArgumentNullException("Field name cannot be null");
         }
 
         internal static void writeIfNotNullOrEmpty(Newtonsoft.Json.JsonTextWriter writer, string key, string value)
         {
             if (string.IsNullOrEmpty(value)) return;
-
             writer.WritePropertyName(key);
             writer.WriteValue(value);
         }

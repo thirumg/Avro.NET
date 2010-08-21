@@ -26,7 +26,7 @@ namespace Avro
     {
         public IList<Schema> schemas { get; private set; }
 
-        public static UnionSchema NewInstance(JArray a, Names names)
+        internal static UnionSchema NewInstance(JArray a, Names names)
         {
             List<Schema> schemas = new List<Schema>();
             ISet<string> uniqueSchemas = new HashSet<string>();

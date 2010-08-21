@@ -24,25 +24,19 @@ namespace Avro
 {
     public class FixedSchema:NamedSchema
     {
-        public int Size { get; set; }
+        public int size { get; set; }
 
-        internal static FixedSchema NewInstance(JToken j)
+        internal static FixedSchema NewInstance(JToken j, Names names)
         {
-            return new FixedSchema(GetName(j), JsonHelper.GetRequiredInteger(j, "size"));
+            return new FixedSchema(GetName(j), JsonHelper.GetRequiredInteger(j, "size"), names);
         }
 
-        public FixedSchema(Name name, int size)
-            : base(Type.FIXED, name)
+        private FixedSchema(Name name, int size, Names names)
+            : base(Type.FIXED, name, names)
         {
             if (size <= 0) throw new ArgumentOutOfRangeException("size", "size must be greater than zero.");
             
-            this.Size = size;
-        }
-
-        public FixedSchema(Name name, int size, Names names)
-            : this(name, size)
-        {
-
+            this.size = size;
         }
 
         protected override void WriteProperties(Newtonsoft.Json.JsonTextWriter writer)
@@ -50,7 +44,7 @@ namespace Avro
             base.WriteProperties(writer);
 
             writer.WritePropertyName("size");
-            writer.WriteValue(this.Size);
+            writer.WriteValue(this.size);
         }
     }
 }

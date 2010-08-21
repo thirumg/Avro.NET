@@ -55,8 +55,8 @@ namespace Avro
             {
                 throw new IOException("Not a data file.");
             }
-            
-            if(!ArrayHelper<byte>.Equals(magic, DataFileConstants.MAGIC))
+
+            if (!ArrayHelper<byte>.Equals(magic, DataFileConstants.MAGIC))
                 throw new IOException("Not a data file.");
 
             long l = _Decoder.ReadMapStart(input);
@@ -74,7 +74,7 @@ namespace Avro
             this.Schema = Schema.Parse(getMetaString(DataFileConstants.SCHEMA));
             //TODO: Resolve the codec. 
             _Reader.Schema = this.Schema;
-            
+
 
         }
 
@@ -122,7 +122,7 @@ namespace Avro
 
         public IEnumerable<string> GetItems()
         {
-            
+
             yield break;
         }
     }

@@ -27,16 +27,14 @@ namespace Avro
         internal static MapSchema NewInstance(JToken j, Names names)
         {
             JToken t = j["values"];
-            if (null == t)
-            {
-                throw new AvroTypeException("Map does not have 'values'");
-            }
+            if (null == t) throw new AvroTypeException("Map does not have 'values'");
             return new MapSchema(Schema.ParseJson(t, names));
         }
 
         public Schema valueSchema { get; private set; }
-        public MapSchema(Schema valueSchema)
-            :base(Type.MAP)
+
+        private MapSchema(Schema valueSchema)
+            : base(Type.MAP)
         {
             if (null == valueSchema) throw new ArgumentNullException("valueSchema", "valueSchema cannot be null.");
             this.valueSchema = valueSchema;

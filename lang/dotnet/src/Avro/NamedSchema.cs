@@ -27,26 +27,23 @@ namespace Avro
     {
         public Name name { get; private set; }
 
-        public static NamedSchema NewInstance(JToken j, Names names)
+        internal static NamedSchema NewInstance(JObject j, Names names)
         {
             string type = JsonHelper.GetRequiredString(j, "type");
 
             NamedSchema result;
             if (names.TryGetValue(type, out result))
             {
-                // FIXME: If the JSON object has anything more than "type" throw.
+                if (j.Count != 1) throw new AvroTypeException("Extra fields in: " + j);
                 return result;
             }
-            /*
-            string doc = JsonHelper.getOptionalString(j, "doc");
-             */
 
             switch (type)
             {
                 case "fixed":
-                    return FixedSchema.NewInstance(j);
+                    return FixedSchema.NewInstance(j, names);
                 case "enum":
-                    return EnumSchema.NewInstance(j);
+                    return EnumSchema.NewInstance(j, names);
                 case "record":
                     return RecordSchema.NewInstance(Type.RECORD, j, names);
                 case "error":
@@ -63,10 +60,11 @@ namespace Avro
             return new Name(n, ns);
         }
 
-        protected NamedSchema(Type type, Name name)
+        protected NamedSchema(Type type, Name name, Names names)
             : base(type)
         {
             this.name = name;
+            names.Add(this);
         }
 
         protected override void WriteProperties(Newtonsoft.Json.JsonTextWriter writer)

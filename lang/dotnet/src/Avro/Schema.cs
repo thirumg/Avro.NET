@@ -112,7 +112,8 @@ namespace Avro
             if (j is JArray) return UnionSchema.NewInstance(j as JArray, names);
             if (j is JObject)
             {
-                string type = JsonHelper.GetRequiredString(j, "type");
+                JObject jo = j as JObject;
+                string type = JsonHelper.GetRequiredString(jo, "type");
 
                 Schema schema = PrimitiveSchema.GetInstance(type);
                 if (null != schema) return schema;
@@ -120,7 +121,7 @@ namespace Avro
                 if (type.Equals("array")) return ArraySchema.NewInstance(j, names);
                 if (type.Equals("map")) return MapSchema.NewInstance(j, names);
                 
-                schema = NamedSchema.NewInstance(j, names);
+                schema = NamedSchema.NewInstance(jo, names);
                 if (null != schema) return schema;
             }
             throw new AvroTypeException("Invalid JSON for schema: " + j);

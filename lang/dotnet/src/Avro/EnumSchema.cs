@@ -26,7 +26,7 @@ namespace Avro
     {
         public IList<string> symbols { get; set; }
 
-        public static EnumSchema NewInstance(JToken j)
+        internal static EnumSchema NewInstance(JToken j, Names names)
         {
             Name name = NamedSchema.GetName(j);
             JArray jsymbols = j["symbols"] as JArray;
@@ -46,11 +46,11 @@ namespace Avro
                 uniqueSymbols.Add(s);
                 symbols.Add(s);
             }
-            return new EnumSchema(name, symbols);
+            return new EnumSchema(name, symbols, names);
         }
 
-        private EnumSchema(Name name, List<string> symbols)
-            : base(Type.ENUM, name)
+        private EnumSchema(Name name, List<string> symbols, Names names)
+            : base(Type.ENUM, name, names)
         {
             this.symbols = symbols;
         }

@@ -28,9 +28,6 @@ namespace Avro
 
         public FieldAttribute()
         {
-
         }
-
-
     }
 }

@@ -25,7 +25,7 @@ namespace Avro
 {
     public enum Codec : int
     {
-        Null, 
+        Null,
         Deflate
     }
 
@@ -43,7 +43,7 @@ namespace Avro
         public static readonly string DEFLATE_CODEC = "deflate";
     }
 
-    public class DataFileWriter<T>:IDisposable
+    public class DataFileWriter<T> : IDisposable
     {
         private DatumWriter<T> _output;
         private Dictionary<string, byte[]> _metadata = new Dictionary<string, byte[]>();
@@ -74,7 +74,7 @@ namespace Avro
             set
             {
                 if (string.IsNullOrEmpty(key)) throw new ArgumentNullException("key", "key cannot be null.");
-                if(isReserved(key))
+                if (isReserved(key))
                     throw new AvroException("Cannot set reserved meta key: " + key);
                 setMetaInternal(key, value);
             }
@@ -91,7 +91,7 @@ namespace Avro
             _iostr.Write(DataFileConstants.MAGIC, 0, DataFileConstants.MAGIC.Length);
 
             _Encoder.WriteMapStart(_iostr);
-            _Encoder.SetItemCount(_iostr,_metadata.Count);
+            _Encoder.SetItemCount(_iostr, _metadata.Count);
 
             foreach (KeyValuePair<string, byte[]> entry in _metadata)
             {
@@ -103,7 +103,7 @@ namespace Avro
             _Encoder.WriteMapEnd(_iostr);
             //_Encoder.Flush();
             writeSync();
-            
+
 
             return this;
         }
@@ -183,7 +183,7 @@ namespace Avro
     //    public DatumWriter DatumWriter { get; private set; }
     //    public BinaryEncoder Encoder { get; private set; }
     //    public byte[] SyncMarker { get; private set; }
-        
+
 
 
     //    private byte[] generate_sync_marker()

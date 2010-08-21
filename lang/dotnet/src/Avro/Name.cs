@@ -57,6 +57,7 @@ namespace Avro
         {
             return string.IsNullOrEmpty(full) ? 0 : full.GetHashCode();
         }
+
         public override string ToString()
         {
             return full;
@@ -99,9 +100,7 @@ namespace Avro
 
         public bool Equals(Name that)
         {
-            if (null == that)
-                return false;
-
+            if (null == that) return false;
             return full == null ? that.full == null : full.Equals(that.full);
         }
     }

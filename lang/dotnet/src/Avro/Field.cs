@@ -23,9 +23,9 @@ namespace Avro
 {
     public enum SortOrder
     {
-        Ascending,
-        Descending,
-        Ignore
+        ASCENDING,
+        DESCENDING,
+        IGNORE
     }
 
     public class Field
@@ -33,42 +33,43 @@ namespace Avro
         /// <summary>
         /// Field Name
         /// </summary>
-        public string Name { get; private set; }
+        public readonly string name;
         /// <summary>
         /// Documentation
         /// </summary>
-        public string Documentation { get; set; }
-        public object Default { get; private set; }
-        public bool HasDefault { get; private set; }
-        public SortOrder? Order { get; private set; }
-        public Schema Schema { get; set; }
+        public readonly string documentation;
+        public readonly object defaultValue;
+        public readonly bool hasDefault;
+        public readonly SortOrder? sortOrder;
+        public readonly Schema schema;
 
 
-        public Field(Schema schema, string name, bool hasDefault)
-            : this(schema, name, hasDefault, null, SortOrder.Ignore, null)
+        internal Field(Schema schema, string name, string defaultValue)
+            : this(schema, name, defaultValue != null, defaultValue, SortOrder.IGNORE, null)
         {
 
         }
 
-        public Field(Schema type, string name, bool hasDefault, object oDefault, SortOrder sortorder, Names names)
+        internal Field(Schema type, string name, bool hasDefault, object oDefault, SortOrder sortorder, Names names)
         {
             if (string.IsNullOrEmpty(name)) throw new ArgumentNullException("name", "name cannot be null.");
             if (null == type) throw new ArgumentNullException("type", "type cannot be null.");
-
-            this.Schema = type;
-            this.Name = name;
+            this.schema = type;
+            this.name = name;
+            this.hasDefault = hasDefault;
+            this.defaultValue = oDefault;
         }
 
         internal void writeJson(Newtonsoft.Json.JsonTextWriter writer)
         {
             writer.WriteStartObject();
-            JsonHelper.writeIfNotNullOrEmpty(writer, "name", this.Name);
-            JsonHelper.writeIfNotNullOrEmpty(writer, "doc", this.Documentation);
+            JsonHelper.writeIfNotNullOrEmpty(writer, "name", this.name);
+            JsonHelper.writeIfNotNullOrEmpty(writer, "doc", this.documentation);
 
-            if (null != this.Schema)
+            if (null != this.schema)
             {
                 writer.WritePropertyName("type");
-                this.Schema.writeJson(writer);
+                this.schema.writeJson(writer);
             }
 
             writer.WriteEndObject();

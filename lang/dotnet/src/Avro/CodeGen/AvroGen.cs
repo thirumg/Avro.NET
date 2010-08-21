@@ -347,7 +347,7 @@ namespace Avro.CodeGen
         private void addFieldAttribute(Field field, CodeMemberProperty property)
         {
             CodeAttributeDeclaration declare = new CodeAttributeDeclaration(AvroFieldAttribute);
-            declare.Arguments.Add(new CodeAttributeArgument("Name", new CodePrimitiveExpression(field.Name)));
+            declare.Arguments.Add(new CodeAttributeArgument("Name", new CodePrimitiveExpression(field.name)));
             property.CustomAttributes.Add(declare);
         }
 
