@@ -64,7 +64,7 @@ namespace Avro
         internal static Message Parse(Newtonsoft.Json.Linq.JProperty jmessage, Names names)
         {
             string name = jmessage.Name;
-            string doc = JsonHelper.getOptionalString(jmessage.Value, "doc");
+            string doc = JsonHelper.GetOptionalString(jmessage.Value, "doc");
             JToken jrequest = jmessage.Value["request"];
             JToken jresponse = jmessage.Value["response"];
             JToken jerrors = jmessage.Value["errors"];
@@ -74,7 +74,7 @@ namespace Avro
             foreach (JToken jtype in jrequest)
             {
                 Parameter parameter = new Parameter();
-                parameter.Name = JsonHelper.getRequiredString(jtype, "name");
+                parameter.Name = JsonHelper.GetRequiredString(jtype, "name");
                 parameter.Schema = Schema.ParseJson(jtype, names);
 
                 if (null == parameter.Schema)

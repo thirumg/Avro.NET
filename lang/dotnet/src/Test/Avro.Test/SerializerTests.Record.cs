@@ -25,6 +25,7 @@ namespace Avro.Test
 {
     public partial class SerializerTests
     {
+        /*
         [TestCase]
         public void RecordTest_Simple()
         {
@@ -72,6 +73,7 @@ namespace Avro.Test
             [Field]
             public long TestInt64 { get; set; }
         }
+         */
 
     }
 }

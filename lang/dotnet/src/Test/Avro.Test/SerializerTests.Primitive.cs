@@ -22,8 +22,9 @@ using NUnit.Framework;
 
 namespace Avro.Test
 {
-	public partial class SerializerTests
-	{
+    public partial class SerializerTests
+    {
+        /*
         [TestCase]
         public void IntTests()
         {
@@ -78,5 +79,6 @@ namespace Avro.Test
 
             TestData(schema, BinaryEncoder.Instance, BinaryDecoder.Instance, data);
         }
-	}
+         */
+    }
 }

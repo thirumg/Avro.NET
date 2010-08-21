@@ -25,26 +25,62 @@ namespace Avro
     class JsonHelper
     {
         static readonly Logger log = new Logger();
-        public static string getOptionalString(JToken j, string property)
+        public static string GetOptionalString(JToken j, string field)
         {
-            if (log.IsDebugEnabled) log.DebugFormat("getOptionalString(JToken, string) - property = {1}, j = {0}", j, property);
+            if (log.IsDebugEnabled) log.DebugFormat("getOptionalString(JToken, string) - field = {1}, j = {0}", j, field);
             if (null == j) throw new ArgumentNullException("j", "j cannot be null.");
-            if (string.IsNullOrEmpty(property)) throw new ArgumentNullException("property", "property cannot be null.");
+            if (string.IsNullOrEmpty(field)) throw new ArgumentNullException("field", "field cannot be null.");
 
-            JToken child = j[property];
+            JToken child = j[field];
             if (log.IsDebugEnabled) log.DebugFormat("getOptionalString(JToken, string) - child = {0}", child);
             if (null == child) return null;
 
-            string value = child.ToString();
-            return value.Trim('\"');
+            if (child.Type == JTokenType.String)
+            {
+                string value = child.ToString();
+                return value.Trim('\"');
+            }
+            else
+            {
+                throw new SchemaParseException("Field " + field + " is not a string");
+            }
         }
 
-        public static string getRequiredString(JToken j, string property)
+        public static string GetRequiredString(JToken j, string property)
         {
-            string value = getOptionalString(j, property);
+            string value = GetOptionalString(j, property);
             if (string.IsNullOrEmpty(value))
-                throw new SchemaParseException(string.Format("No \"{0}\" property: {1}", property, j));
+            {
+                throw new SchemaParseException(string.Format("No \"{0}\" JSON field: {1}", property, j));
+            }
             return value;
+        }
+
+        public static int GetRequiredInteger(JToken j, string field)
+        {
+            ensureValidFieldName(field);
+            JToken child = j[field];
+            if (null == child)
+            {
+                throw new SchemaParseException(string.Format("No \"{0}\" JSON field: {1}", field, j));
+            }
+
+            if (child.Type == JTokenType.Integer)
+            {
+                return (int) child;
+            }
+            else
+            {
+                throw new SchemaParseException("Field " + field + " is not an integer");
+            }
+        }
+
+        private static void ensureValidFieldName(string name)
+        {
+            if (string.IsNullOrEmpty(name))
+            {
+                throw new ArgumentNullException("Field name cannot be null");
+            }
         }
 
         internal static void writeIfNotNullOrEmpty(Newtonsoft.Json.JsonTextWriter writer, string key, string value)

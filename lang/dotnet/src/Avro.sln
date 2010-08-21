@@ -1,6 +1,6 @@
 ﻿
-Microsoft Visual Studio Solution File, Format Version 10.00
-# Visual Studio 2008
+Microsoft Visual Studio Solution File, Format Version 11.00
+# Visual C# Express 2010
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Avro", "Avro\Avro.csproj", "{78540EEE-DBB8-497B-A9EB-0ECF61DE6B6D}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Avro.Test", "Test\Avro.Test\Avro.Test.csproj", "{BFA80DEE-C376-49F8-B9CF-FB68554FD63D}"

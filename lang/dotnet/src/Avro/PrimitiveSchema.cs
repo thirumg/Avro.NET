@@ -21,89 +21,73 @@ using System.Text;
 
 namespace Avro
 {
-    public class PrimitiveSchema:Schema, IEquatable<Schema>
+    public sealed class PrimitiveSchema : UnnamedSchema, IEquatable<Schema>
     {
-        public static readonly Schema Null;
-        public static readonly Schema Boolean;
-        public static readonly Schema Int;
-        public static readonly Schema Long;
-        public static readonly Schema Float;
-        public static readonly Schema Double;
-        public static readonly Schema Bytes;
-        public static readonly Schema String;
-        public static readonly string[] SupportedTypes;
-        //public static readonly IDictionary<SchemaType, string> PrimitiveValueLookup;
-        public static readonly IDictionary<string, string> PrimitiveKeyLookup;
+        public static readonly PrimitiveSchema NULL = new PrimitiveSchema(Schema.Type.NULL);
+        public static readonly PrimitiveSchema BOOLEAN = new PrimitiveSchema(Schema.Type.BOOLEAN);
+        public static readonly PrimitiveSchema INT = new PrimitiveSchema(Schema.Type.INT);
+        public static readonly PrimitiveSchema LONG = new PrimitiveSchema(Schema.Type.LONG);
+        public static readonly PrimitiveSchema FLOAT = new PrimitiveSchema(Schema.Type.FLOAT);
+        public static readonly PrimitiveSchema DOUBLE = new PrimitiveSchema(Schema.Type.DOUBLE);
+        public static readonly PrimitiveSchema BYTES = new PrimitiveSchema(Schema.Type.BYTES);
+        public static readonly PrimitiveSchema STRING = new PrimitiveSchema(Schema.Type.STRING);
+
+        public static readonly IDictionary<Type, PrimitiveSchema> primitiveTypes = new Dictionary<Type, PrimitiveSchema>();
         static PrimitiveSchema()
         {
-            SupportedTypes = new string[]{
-                  "null",
-  "boolean",
-  "string",
-  "bytes",
-  "int",
-  "long",
-  "float",
-  "double"
+            PrimitiveSchema[] ps = new PrimitiveSchema[] {
+                NULL, BOOLEAN, INT, LONG, FLOAT, DOUBLE, BYTES, STRING
             };
 
-            Dictionary<string, string> keylookup = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
-            foreach (string key in SupportedTypes)
+            foreach (PrimitiveSchema p in ps)
             {
-                keylookup.Add(key, key);
-            }
-            PrimitiveKeyLookup = keylookup;
-
-            Null = new PrimitiveSchema(SchemaType.NULL);
-            Boolean = new PrimitiveSchema(SchemaType.BOOLEAN);
-            Int = new PrimitiveSchema(SchemaType.INT);
-            Long = new PrimitiveSchema(SchemaType.LONG);
-            Float = new PrimitiveSchema(SchemaType.FLOAT);
-            Double = new PrimitiveSchema(SchemaType.DOUBLE);
-            Bytes = new PrimitiveSchema(SchemaType.BYTES);
-            String = new PrimitiveSchema(SchemaType.STRING);
-        }
-
-        public PrimitiveSchema(string type)
-            : base(type)
-        {
-            if (!PrimitiveKeyLookup.ContainsKey(type))
-            {
-                throw new NotSupportedException("Type \"" + type + "\" is not a primitive.");
+                primitiveTypes.Add(p.type, p);
             }
         }
 
-
-
-        public static Schema Create(string json)
+        private PrimitiveSchema(Type type) :
+            base(type)
         {
-            if (!IsPrimitive(json))
-                throw new NotSupportedException(json + " is not supported as a primitive type.");
-            return new PrimitiveSchema(json.Trim('\"'));
         }
 
-        public static bool IsPrimitive(string json)
+        public static PrimitiveSchema GetInstance(string type)
         {
-            return PrimitiveKeyLookup.ContainsKey(json.Trim('\"'));
+            switch (type)
+            {
+                case "null":
+                    return NULL;
+                case "boolean":
+                    return BOOLEAN;
+                case "int":
+                    return INT;
+                case "long":
+                    return LONG;
+                case "float":
+                    return FLOAT;
+                case "double":
+                    return DOUBLE;
+                case "bytes":
+                    return BYTES;
+                case "string":
+                    return STRING;
+                default:
+                    return null;
+            }
         }
 
         public override int GetHashCode()
         {
-            return this.Type.GetHashCode();
+            return this.type.GetHashCode();
         }
-
-
-
-        
 
         public bool Equals(Schema other)
         {
-            if (null == other)
-                return false;
-            if (!(other is PrimitiveSchema))
-                return false;
-            PrimitiveSchema o = other as PrimitiveSchema;
-            return o.Type == this.Type;
+            if (null != other && other is PrimitiveSchema)
+            {
+                PrimitiveSchema o = other as PrimitiveSchema;
+                return o.type == this.type;
+            }
+            return false;
         }
     }
 }

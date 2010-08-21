@@ -23,8 +23,8 @@ using NUnit.Framework;
 namespace Avro.Test
 {
     [TestFixture]
-	public partial class SchemaTests
-	{
+    public partial class SchemaTests
+    {
 
-	}
+    }
 }

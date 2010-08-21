@@ -18,39 +18,52 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using Newtonsoft.Json.Linq;
 
 namespace Avro
 {
-    public class UnionSchema:Schema
+    public class UnionSchema : UnnamedSchema
     {
-        public IList<Schema> Schemas { get; private set; }
+        public IList<Schema> schemas { get; private set; }
 
-        public UnionSchema(params Schema[] schemas)
-            : base("union")
+        public static UnionSchema NewInstance(JArray a, Names names)
         {
-            if (null == schemas || schemas.Length == 0) throw new ArgumentNullException("schemas", "schemas cannot be null or empty.");
+            List<Schema> schemas = new List<Schema>();
+            ISet<string> uniqueSchemas = new HashSet<string>();
 
-            this.Schemas = new List<Schema>(schemas);
+            foreach (JToken jvalue in a)
+            {
+                Schema unionTypes = Schema.ParseJson(jvalue, names);
+                string name = unionTypes.GetName();
+                if (uniqueSchemas.Contains(name))
+                {
+                    throw new SchemaParseException("Duplicate type in union: " + name);
+                }
+                uniqueSchemas.Add(name);
+                schemas.Add(unionTypes);
+            }
 
+            return new UnionSchema(schemas);
         }
 
-        public UnionSchema(IEnumerable<Schema> schemas)
-            : base("union")
+        private UnionSchema(List<Schema> schemas)
+            : base(Type.UNION)
         {
-            if (null == schemas) throw new ArgumentNullException("schemas", "schemas cannot be null.");
-            this.Schemas = new List<Schema>(schemas);
-        }
+            if (schemas.Count == 0)
+            {
+                throw new ArgumentNullException("Union members cannot be null or empty");
+            }
 
+            this.schemas = schemas;
+        }
 
         internal override void writeJson(Newtonsoft.Json.JsonTextWriter writer)
         {
             writer.WriteStartArray();
-
-            foreach (Schema schema in this.Schemas)
+            foreach (Schema schema in this.schemas)
             {
                 schema.writeJson(writer);
             }
-
             writer.WriteEndArray();
         }
     }

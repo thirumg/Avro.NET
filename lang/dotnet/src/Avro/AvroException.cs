@@ -21,18 +21,16 @@ using System.Text;
 
 namespace Avro
 {
-    public class AvroException:Exception
+    public class AvroException : Exception
     {
         public AvroException(string s)
             : base(s)
         {
-
         }
 
         public AvroException(string s, Exception inner)
             : base(s, inner)
         {
-
         }
     }
 }

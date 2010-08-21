@@ -198,7 +198,7 @@ namespace Avro
                 else
                     return generateRecordDecoder((RecordSchema)schema, dataType);
             }
-            throw new NotSupportedException("Schema of type " + schema.Type + " is not supported yet.");
+            throw new NotSupportedException("Schema of type " + schema.type + " is not supported yet.");
         }
 
         static class EncoderHelper
@@ -402,6 +402,7 @@ namespace Avro
 
             Dictionary<string, RecordState> fieldLookup = getFieldAttributes(dataType);
 
+            /*
             foreach (Field field in schema.Fields)
             {
                 RecordState state;
@@ -426,6 +427,7 @@ namespace Avro
                 il.Emit(OpCodes.Nop);
 
             }
+             */
 
             il.Emit(OpCodes.Ldloc_0);
             il.Emit(OpCodes.Ret);
@@ -447,7 +449,7 @@ namespace Avro
             il.Emit(OpCodes.Nop);
 
 
-
+            /*
             foreach (Field field in schema.Fields)
             {
                 RecordState state;
@@ -470,6 +472,7 @@ namespace Avro
 
                 //il.Emit(OpCodes.Call
             }
+             */
             il.Emit(OpCodes.Ret);
 
             //EmitHelperInstance.Save();
@@ -537,7 +540,7 @@ namespace Avro
             Type elementType = dataType.GetElementType();
 
             MethodInfo setArrayValueMethod = getArraySetValue(elementType);
-            MethodInfo valueDecodeMethod = getMethodInfo(MethodType.Decoder, schema.ItemSchema, elementType);
+            MethodInfo valueDecodeMethod = getMethodInfo(MethodType.Decoder, schema.itemSchema, elementType);
             long hashCode = getHashCode(schema, dataType);
             string methodName = string.Format("DecodeArray{0}", hashCode);
 
@@ -610,7 +613,7 @@ namespace Avro
             validateArrayType(dataType);
             Type elementType = dataType.GetElementType();
 
-            MethodInfo valueEncodeMethod = getMethodInfo(MethodType.Encoder, schema.ItemSchema, elementType);
+            MethodInfo valueEncodeMethod = getMethodInfo(MethodType.Encoder, schema.itemSchema, elementType);
 
 
             long hashCode = getHashCode(schema, dataType);
@@ -706,7 +709,7 @@ namespace Avro
 
             Type[] args = getDecoderMethodArgs(dictHelper.IDictionaryType);
 
-            MethodInfo valueDecoderMethod = getMethodInfo(MethodType.Decoder, schema.ValueSchema, mapValueType);
+            MethodInfo valueDecoderMethod = getMethodInfo(MethodType.Decoder, schema.valueSchema, mapValueType);
 
             ILGenerator il=null;
             MethodInfo method = EmitHelperInstance.CreateMethod(methodName, dictHelper.IDictionaryType, args, out il);
@@ -776,7 +779,7 @@ namespace Avro
             Type mapValueType = getMapValueType(dataType);
             DictionaryHelper dictHelper = new DictionaryHelper(typeof(string), mapValueType);
             
-            MethodInfo valueEncodeMethod = getMethodInfo(MethodType.Encoder, schema.ValueSchema, dictHelper.ValueType);
+            MethodInfo valueEncodeMethod = getMethodInfo(MethodType.Encoder, schema.valueSchema, dictHelper.ValueType);
 
             long hashCode = getHashCode(schema, dataType);
             string methodName = string.Format("EncodeMap{0}", hashCode);

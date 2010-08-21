@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="3.5" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
@@ -10,10 +10,13 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>Avro</RootNamespace>
     <AssemblyName>avro</AssemblyName>
-    <TargetFrameworkVersion>v2.0</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
-    <TargetFrameworkSubset>
-    </TargetFrameworkSubset>
+    <FileUpgradeFlags>
+    </FileUpgradeFlags>
+    <UpgradeBackupLocation>
+    </UpgradeBackupLocation>
+    <OldToolsVersion>3.5</OldToolsVersion>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -52,7 +55,7 @@
     <Compile Include="AvroTypeException.cs" />
     <Compile Include="BinaryDecoder.cs" />
     <Compile Include="BinaryEncoder.cs" />
-    <Compile Include="BooleanSchema.cs" />
+    <Compile Include="UnnamedSchema.cs" />
     <Compile Include="CodeGen\AvroGen.cs" />
     <Compile Include="DataFileException.cs" />
     <Compile Include="DataFileReader.cs" />
@@ -63,7 +66,6 @@
     <Compile Include="IO\Decoder.cs" />
     <Compile Include="IO\Encoder.cs" />
     <Compile Include="EnumSchema.cs" />
-    <Compile Include="ErrorSchema.cs" />
     <Compile Include="Field.cs" />
     <Compile Include="FixedSchema.cs" />
     <Compile Include="GenericDatumReader.cs" />
@@ -75,7 +77,6 @@
     <Compile Include="Name.cs" />
     <Compile Include="NamedSchema.cs" />
     <Compile Include="Names.cs" />
-    <Compile Include="NullSchema.cs" />
     <Compile Include="PrimitiveSchema.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Protocol.cs" />

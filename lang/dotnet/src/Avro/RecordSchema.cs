@@ -18,58 +18,69 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using Newtonsoft.Json.Linq;
 
 namespace Avro
 {
-    public class RecordSchema:NamedSchema
+    public class RecordSchema : NamedSchema
     {
-        public IList<Field> Fields { get; set; }
+        public IDictionary<string, Field> Fields;
+
         private IDictionary<string, Field> _fieldLookup;
 
-        public RecordSchema(Name name)
-            : this(SchemaType.RECORD, name, null, null)
+        public static RecordSchema NewInstance(Type type, JToken j, Names names)
         {
+            JToken jfields = j["fields"];
 
+            if (null == jfields)
+            {
+                throw new SchemaParseException("'fields' cannot be null for record");
+            }
+
+            if (jfields.Type != JTokenType.Array) {
+                throw new SchemaParseException("'fields' not an array for record");
+            }
+
+            Name name = GetName(j);
+            IDictionary<string, Field> fields = new Dictionary<string, Field>();
+            foreach (JObject jfield in jfields)
+            {
+                string fieldName = JsonHelper.GetRequiredString(jfield, "name");
+                Field field = createField(jfield, names);
+                fields.Add(fieldName, field);
+            }
+            return new RecordSchema(type, name, fields);
         }
 
-        public RecordSchema(Name name, IEnumerable<Field> fields, Names names)
-            : this(SchemaType.RECORD, name, fields, names)
+        private static Field createField(JToken jfield, Names names)
         {
+            string name = JsonHelper.GetRequiredString(jfield, "name");
+            string doc = JsonHelper.GetOptionalString(jfield, "doc");
 
+            JToken jtype = jfield["type"];
+            if (null == jtype)
+            {
+                throw new SchemaParseException("'type' was not found for field: " + name);
+            }
+            Schema type = Schema.ParseJson(jtype, names);
+
+            return new Field(type, name, false);
         }
 
-        public RecordSchema(string type, Name name, IEnumerable<Field> fields, Names names)
-            : base(type, name, names)
-        {
-            //if (null == fields) throw new ArgumentNullException("fields", "fields cannot be null.");
-            this.Fields = new List<Field>();
-
-            Dictionary<string, Field> fieldLookup = new Dictionary<string, Field>(StringComparer.Ordinal);
-
-            if (null != fields)
-                foreach (Field field in fields)
-                {
-                    AddField(field);
-                }
-
-            _fieldLookup = fieldLookup;
+        private RecordSchema(Type type, Name name, IDictionary<string, Field> fields)
+            : base(type, name) {
+            this.Fields = fields;
         }
-
-        public void AddField(Field field)
-        {
-            this.Fields.Add(field);
-            _fieldLookup.Add(field.Name, field);
-        }
-
-        
-
 
         public new Field this[string name]
         {
             get
             {
-                if (string.IsNullOrEmpty(name)) throw new ArgumentNullException("name", "name cannot be null.");
-                Field field = null;
+                if (string.IsNullOrEmpty(name))
+                {
+                    throw new ArgumentNullException("name", "name cannot be null.");
+                }
+                Field field;
 
                 if (_fieldLookup.TryGetValue(name, out field))
                 {
@@ -88,7 +99,7 @@ namespace Avro
                 writer.WritePropertyName("fields");
                 writer.WriteStartArray();
 
-                foreach (Field field in this.Fields)
+                foreach (Field field in this.Fields.Values)
                 {
                     field.writeJson(writer);
                 }

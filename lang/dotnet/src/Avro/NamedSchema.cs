@@ -18,72 +18,69 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using Newtonsoft.Json.Linq;
+
 
 namespace Avro
 {
-    public abstract class NamedSchema:Schema
+    public abstract class NamedSchema : Schema
     {
-        public Name Name { get; private set; }
+        public Name name { get; private set; }
 
-        //public string Namespace
-        //{
-        //    get { return this.Name.space; }
-        //}
+        public static NamedSchema NewInstance(JToken j, Names names)
+        {
+            string type = JsonHelper.GetRequiredString(j, "type");
 
-        //public string FullName
-        //{
-        //    get
-        //    {
-        //        return this.Name.full;
-        //    }
-        //}
-        public NamedSchema(string type, Name name, Names names)
+            NamedSchema result;
+            if (names.TryGetValue(type, out result))
+            {
+                // FIXME: If the JSON object has anything more than "type" throw.
+                return result;
+            }
+            /*
+            string doc = JsonHelper.getOptionalString(j, "doc");
+             */
+
+            switch (type)
+            {
+                case "fixed":
+                    return FixedSchema.NewInstance(j);
+                case "enum":
+                    return EnumSchema.NewInstance(j);
+                case "record":
+                    return RecordSchema.NewInstance(Type.RECORD, j, names);
+                case "error":
+                    return RecordSchema.NewInstance(Type.ERROR, j, names);
+                default:
+                    return null;
+            }
+        }
+
+        protected static Name GetName(JToken j)
+        {
+            String n = JsonHelper.GetRequiredString(j, "name");
+            String ns = JsonHelper.GetOptionalString(j, "namespace");
+            return new Name(n, ns);
+        }
+
+        protected NamedSchema(Type type, Name name)
             : base(type)
         {
-            if(null==name)throw new ArgumentNullException("name", "name cannot be null.");
-            
-
-            if (PrimitiveSchema.PrimitiveKeyLookup.ContainsKey(name.full))
-            {
-                throw new SchemaParseException("Schemas may not be named after primitives: " + name.full);
-            }
-
-            this.Name = name;
-            //Avro.Name a = Avro.Name.extract_namespace(name, snamespace);
+            this.name = name;
         }
-
-
-        public static readonly string[] SupportedTypes;
-        public static readonly IDictionary<string, string> PrimitiveKeyLookup;
-        
-
-        static NamedSchema()
-        {
-            SupportedTypes = new string[]{
-               "fixed",
-              "enum",
-              "record",
-              "error"
-            };
-
-            Dictionary<string, string> keylookup = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
-            foreach (string key in SupportedTypes)
-            {
-                keylookup.Add(key, key);
-            }
-            PrimitiveKeyLookup = keylookup;
-        }
-
-
-
 
         protected override void WriteProperties(Newtonsoft.Json.JsonTextWriter writer)
         {
             base.WriteProperties(writer);
-            this.Name.WriteJson(writer);
+            this.name.WriteJson(writer);
 
             //JsonHelper.writeIfNotNullOrEmpty(writer, "name", this.Name);
-            JsonHelper.writeIfNotNullOrEmpty(writer, "namespace", this.Name.space);
+            JsonHelper.writeIfNotNullOrEmpty(writer, "namespace", this.name.space);
+        }
+
+        public override string GetName()
+        {
+            return name.full;
         }
     }
 }

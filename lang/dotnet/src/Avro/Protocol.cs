@@ -51,9 +51,9 @@ namespace Avro
 
         private static Protocol Parse(JToken j)
         {
-            string protocol = JsonHelper.getRequiredString(j, "protocol");
-            string snamespace = JsonHelper.getRequiredString(j, "namespace");
-            string doc = JsonHelper.getOptionalString(j, "doc");
+            string protocol = JsonHelper.GetRequiredString(j, "protocol");
+            string snamespace = JsonHelper.GetRequiredString(j, "namespace");
+            string doc = JsonHelper.GetOptionalString(j, "doc");
 
             Names names = new Names();
 

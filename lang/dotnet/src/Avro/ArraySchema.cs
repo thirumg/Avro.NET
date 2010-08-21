@@ -18,26 +18,37 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using Newtonsoft.Json.Linq;
 
 namespace Avro
 {
-    public class ArraySchema:Schema
+    public class ArraySchema : UnnamedSchema
     {
-        public Schema ItemSchema { get; set; }
+        internal static ArraySchema NewInstance(JToken j, Names names)
+        {
+            JToken t = j["items"];
+            if (null == t)
+            {
+                throw new AvroTypeException("Array does not have 'items'");
+            }
+            return new ArraySchema(Schema.ParseJson(t, names));
+        }
+
+        public Schema itemSchema { get; set; }
 
         public ArraySchema(Schema items)
-            : base("array")
+            : base(Type.ARRAY)
         {
             if (null == items) throw new ArgumentNullException("items", "items cannot be null.");
-            this.ItemSchema = items;
+            this.itemSchema = items;
         }
 
         protected override void WriteProperties(Newtonsoft.Json.JsonTextWriter writer)
         {
-            if (null != this.ItemSchema)
+            if (null != this.itemSchema)
             {
                 writer.WritePropertyName("items");
-                this.ItemSchema.writeJson(writer);
+                this.itemSchema.writeJson(writer);
             }
         }
     }

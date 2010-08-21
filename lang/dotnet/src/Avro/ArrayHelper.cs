@@ -25,20 +25,16 @@ namespace Avro
     {
         public static bool Equals(T[] a, T[] b)
         {
-            if (null == a && null == b)
-                return true;
-            if ((null == a && null != b) || (null == b && null != a))
-                return false;
-            if (a.Length != b.Length)
-                return false;
+            if (null == a && null == b) return true;
+            if (null == a || null == b) return false;
+            if (a.Length != b.Length) return false;
 
             for (long i = 0; i < a.LongLength; i++)
-                if (!object.Equals(a[i], b[i]))
-                    return false;
+            {
+                if (!object.Equals(a[i], b[i])) return false;
+            }
 
             return true;
         }
-
-
     }
 }

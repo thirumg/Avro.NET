@@ -18,22 +18,41 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using Newtonsoft.Json.Linq;
 
 namespace Avro
 {
-    public class EnumSchema:NamedSchema
+    public class EnumSchema : NamedSchema
     {
-        public IList<string> Symbols { get; set; }
+        public IList<string> symbols { get; set; }
 
-        public EnumSchema(Name name, IEnumerable<string> symbols, Names names)
-            : base("enum", name, names)
+        public static EnumSchema NewInstance(JToken j)
         {
-            if (null == symbols) throw new ArgumentNullException("symbols", "symbols cannot be null or empty.");
+            Name name = NamedSchema.GetName(j);
+            JArray jsymbols = j["symbols"] as JArray;
+            if (null == jsymbols)
+            {
+                throw new SchemaParseException("Enum has no symbols: " + name);
+            }
+            List<string> symbols = new List<string>();
+            ISet<string> uniqueSymbols = new HashSet<string>();
+            foreach (JValue jsymbol in jsymbols)
+            {
+                string s = jsymbol.Value<string>();
+                if (uniqueSymbols.Contains(s))
+                {
+                    throw new SchemaParseException("Duplicate symbol: " + s);
+                }
+                uniqueSymbols.Add(s);
+                symbols.Add(s);
+            }
+            return new EnumSchema(name, symbols);
+        }
 
-            this.Symbols = new List<string>(symbols);
-
-            if (this.Symbols.Count == 0) throw new ArgumentNullException("symbols", "symbols cannot be null or empty.");
-
+        private EnumSchema(Name name, List<string> symbols)
+            : base(Type.ENUM, name)
+        {
+            this.symbols = symbols;
         }
 
         protected override void WriteProperties(Newtonsoft.Json.JsonTextWriter writer)
@@ -43,11 +62,10 @@ namespace Avro
 
             writer.WriteStartArray();
 
-            foreach (string s in this.Symbols)
+            foreach (string s in this.symbols)
             {
                 writer.WriteValue(s);
             }
-
 
             writer.WriteEndArray();
         }

@@ -104,9 +104,9 @@ namespace Avro.CodeGen
                 {
                     NamedSchema named = schema as NamedSchema;
 
-                    if (named.Name != null && !string.IsNullOrEmpty(named.Name.space))
+                    if (named.name != null && !string.IsNullOrEmpty(named.name.space))
                     {
-                        ns = addNamespace(named.Name.space);
+                        ns = addNamespace(named.name.space);
                     }
                 }
 
@@ -138,37 +138,37 @@ namespace Avro.CodeGen
 
         private void processSchema(CodeNamespace ns, Schema schema)
         {
-            if (SchemaType.ENUM == schema.Type)
+            if (Schema.Type.ENUM == schema.type)
             {
                 processEnum(schema, ns);
             }
-            else if (SchemaType.FIXED == schema.Type)
+            else if (Schema.Type.FIXED == schema.type)
             {
                 processFixed(schema);
             }
-            else if (SchemaType.RECORD == schema.Type)
+            else if (Schema.Type.RECORD == schema.type)
             {
                 processRecord(schema, ns);
             }
-            else if (SchemaType.ERROR == schema.Type)
+            else if (Schema.Type.ERROR == schema.type)
             {
                 CodeTypeDeclaration errorRecord = processRecord(schema, ns);
             }
-            else if (SchemaType.ARRAY == schema.Type)
+            else if (Schema.Type.ARRAY == schema.type)
             {
                 processArray(schema);
             }
-            else if (SchemaType.MAP == schema.Type)
+            else if (Schema.Type.MAP == schema.type)
             {
                 procesMap(schema);
             }
-            else if (SchemaType.UNION == schema.Type)
+            else if (Schema.Type.UNION == schema.type)
             {
                 processUnion(schema);
             }
             else
             {
-                throw new NotSupportedException("Schema Schema of \"" + schema.Type + "\" is not supported yet.");
+                throw new NotSupportedException("Schema Schema of \"" + schema.type + "\" is not supported yet.");
             }
         }
 
@@ -185,7 +185,7 @@ namespace Avro.CodeGen
         {
             const string PREFIX = "findNullableType(UnionSchema, out Type) - ";
 
-            if(schema.Schemas.Count!=2)
+            if(schema.schemas.Count!=2)
             {
 
                 type=null;
@@ -195,11 +195,11 @@ namespace Avro.CodeGen
             bool isnullable = false;
             CodeTypeReference otherType = null;
 
-            foreach (Schema childSchema in schema.Schemas)
+            foreach (Schema childSchema in schema.schemas)
             {
-                if (log.IsDebugEnabled) log.DebugFormat(PREFIX + "childSchema.Type = \"{0}\"", childSchema.Type);
+                if (log.IsDebugEnabled) log.DebugFormat(PREFIX + "childSchema.Type = \"{0}\"", childSchema.type);
 
-                if (PrimitiveSchema.Null.Equals(childSchema))
+                if (PrimitiveSchema.NULL.Equals(childSchema))
                 {
                     isnullable = true;
                 }
@@ -251,7 +251,7 @@ namespace Avro.CodeGen
 
             CodeTypeReference typeRef = new CodeTypeReference(typeof(IDictionary<,>));
             typeRef.TypeArguments.Add(new CodeTypeReference(typeof(string)));
-            CodeTypeReference valueRef = getCodeTypeReference(mapSchema.ValueSchema);
+            CodeTypeReference valueRef = getCodeTypeReference(mapSchema.valueSchema);
             typeRef.TypeArguments.Add(valueRef);
             _SchemaToCodeTypeReferenceLookup.Add(schema, typeRef);
         }
@@ -263,7 +263,7 @@ namespace Avro.CodeGen
 
             ArraySchema arraySchema = schema as ArraySchema;
 
-            CodeTypeReference arrayItemRef = getCodeTypeReference(arraySchema.ItemSchema);
+            CodeTypeReference arrayItemRef = getCodeTypeReference(arraySchema.itemSchema);
 
             CodeTypeReference arrayRef = new CodeTypeReference(arrayItemRef, 1);
 
@@ -276,12 +276,12 @@ namespace Avro.CodeGen
 
             CodeNamespace recordNamespace = null;
 
-            if (string.IsNullOrEmpty(recordSchema.Name.space) && null!=ns)
+            if (string.IsNullOrEmpty(recordSchema.name.space) && null!=ns)
                 recordNamespace = ns;
             else
-                recordNamespace = addNamespace(recordSchema.Name.space);
+                recordNamespace = addNamespace(recordSchema.name.space);
 
-            CodeTypeReference refRecord = new CodeTypeReference(recordSchema.Name.name);
+            CodeTypeReference refRecord = new CodeTypeReference(recordSchema.name.name);
 
             _SchemaToCodeTypeReferenceLookup.Add(schema, refRecord);
 
@@ -290,50 +290,52 @@ namespace Avro.CodeGen
             recordDeclare.IsClass = true;
             recordDeclare.IsPartial = true;
 
-            foreach (Field field in recordSchema.Fields)
+            /* FIXME: Thiru
+        foreach (Field field in recordSchema.Fields)
+        {
+            if (SchemaType.NULL == field.Schema.type)
             {
-                if (SchemaType.NULL == field.Schema.Type)
-                {
-                    //TODO: Look into this. It just feels wrong. I don't understand the need for a null field, but can this be stubbed out so that it will at least generate a field with type of object?
-                    if (log.IsDebugEnabled) log.DebugFormat("Skipping field \"{0}\" because it is null", field.Name);
+                //TODO: Look into this. It just feels wrong. I don't understand the need for a null field, but can this be stubbed out so that it will at least generate a field with type of object?
+                if (log.IsDebugEnabled) log.DebugFormat("Skipping field \"{0}\" because it is null", field.Name);
 
-                    continue;
-                }
+                continue;
+            }
 
-                CodeTypeReference fieldType = getCodeTypeReference(field.Schema);
+            CodeTypeReference fieldType = getCodeTypeReference(field.Schema);
+            if (null == fieldType)
+            {
+                processSchema(ns, field.Schema);
+
+                fieldType = getCodeTypeReference(field.Schema);
+
                 if (null == fieldType)
                 {
-                    processSchema(ns, field.Schema);
-
-                    fieldType = getCodeTypeReference(field.Schema);
-
-                    if (null == fieldType)
-                    {
-                        throw new Exception("Field Schema \"" + field.Schema + "\" not found.");
-                    }
+                    throw new Exception("Field Schema \"" + field.Schema + "\" not found.");
                 }
-
-                CodeCommentStatement propertyComment = string.IsNullOrEmpty(field.Documentation) ? null : createDocComment(field.Documentation);
-                string privFieldName = string.Concat("_", field.Name);
-                CodeFieldReferenceExpression fieldRef = new CodeFieldReferenceExpression(new CodeThisReferenceExpression(), privFieldName);
-                CodeMemberField codeField = new CodeMemberField(fieldType, fieldRef.FieldName);
-                codeField.Attributes = MemberAttributes.Private;
-                if (null != propertyComment)
-                    codeField.Comments.Add(propertyComment);
-
-                recordDeclare.Members.Add(codeField);
-
-                CodeMemberProperty property = new CodeMemberProperty();
-                property.Attributes = MemberAttributes.Public|MemberAttributes.Final;
-                property.Name = field.Name;
-                property.Type = fieldType;
-                addFieldAttribute(field, property);
-                property.GetStatements.Add(new CodeMethodReturnStatement(fieldRef));
-                property.SetStatements.Add(new CodeAssignStatement(fieldRef, new CodePropertySetValueReferenceExpression()));
-                if (null != propertyComment)
-                    property.Comments.Add(propertyComment);
-                recordDeclare.Members.Add(property);
             }
+
+            CodeCommentStatement propertyComment = string.IsNullOrEmpty(field.Documentation) ? null : createDocComment(field.Documentation);
+            string privFieldName = string.Concat("_", field.Name);
+            CodeFieldReferenceExpression fieldRef = new CodeFieldReferenceExpression(new CodeThisReferenceExpression(), privFieldName);
+            CodeMemberField codeField = new CodeMemberField(fieldType, fieldRef.FieldName);
+            codeField.Attributes = MemberAttributes.Private;
+            if (null != propertyComment)
+                codeField.Comments.Add(propertyComment);
+
+            recordDeclare.Members.Add(codeField);
+
+            CodeMemberProperty property = new CodeMemberProperty();
+            property.Attributes = MemberAttributes.Public|MemberAttributes.Final;
+            property.Name = field.Name;
+            property.Type = fieldType;
+            addFieldAttribute(field, property);
+            property.GetStatements.Add(new CodeMethodReturnStatement(fieldRef));
+            property.SetStatements.Add(new CodeAssignStatement(fieldRef, new CodePropertySetValueReferenceExpression()));
+            if (null != propertyComment)
+                property.Comments.Add(propertyComment);
+            recordDeclare.Members.Add(property);
+        }
+             */
 
             recordNamespace.Types.Add(recordDeclare);
 
@@ -368,14 +370,14 @@ namespace Avro.CodeGen
             EnumSchema enumschema = schema as EnumSchema;
             //TODO: This looks wrong. Double check is an enum schema a named schema? If so use the namespace if no namespace is provided. 
             if(null==enumschema) throw new NotSupportedException();
-            CodeTypeReference refEnum = new CodeTypeReference(enumschema.Name.full);
+            CodeTypeReference refEnum = new CodeTypeReference(enumschema.name.full);
             CodeTypeDeclaration typeEnum = createCodeTypeDeclaration(refEnum.BaseType);
             typeEnum.BaseTypes.Add(typeof(int));
             typeEnum.IsEnum = true;
             typeEnum.Attributes = MemberAttributes.Public;
 
             int index = 0;
-            foreach (string symbol in enumschema.Symbols)
+            foreach (string symbol in enumschema.symbols)
             {
                 CodeMemberField field = new CodeMemberField(typeof(int), symbol);
                 field.InitExpression = new CodePrimitiveExpression(index++);
@@ -386,9 +388,9 @@ namespace Avro.CodeGen
 
             CodeNamespace addtoNs = null;
 
-            if (null != enumschema.Name && !string.IsNullOrEmpty(enumschema.Name.space))
+            if (null != enumschema.name && !string.IsNullOrEmpty(enumschema.name.space))
             {
-                addtoNs = addNamespace(enumschema.Name.space);
+                addtoNs = addNamespace(enumschema.name.space);
             }
             else
             {
@@ -415,7 +417,7 @@ namespace Avro.CodeGen
                 typeClient.Members.Add(methodMessage);
                 methodMessage.Name = message.Name;
                 methodMessage.Attributes = MemberAttributes.Public | MemberAttributes.Final;
-                if (!(message.Response == null||message.Response == PrimitiveSchema.Null))
+                if (!(message.Response == null||message.Response == PrimitiveSchema.NULL))
                     methodMessage.ReturnType = getCodeTypeReference(message.Response);
                 if (!string.IsNullOrEmpty(message.Doc))
                     methodMessage.Comments.Add(createDocComment(message.Doc));
@@ -439,7 +441,7 @@ namespace Avro.CodeGen
 
                 CodeMethodInvokeExpression callInvoke = new CodeMethodInvokeExpression(new CodeBaseReferenceExpression(), "Invoke", invokeParameters.ToArray());
 
-                if ((message.Response == null || PrimitiveSchema.Null.Equals(message.Response)))
+                if ((message.Response == null || PrimitiveSchema.NULL.Equals(message.Response)))
                 {
                     methodMessage.Statements.Add(callInvoke);
                 }
@@ -499,8 +501,10 @@ namespace Avro.CodeGen
         {
             CodeTypeReference typeref = null;
 
-            if (_PrimitiveLookup.TryGetValue(schema.Type, out typeref))
+            /* FIXME: Thiru
+            if (_PrimitiveLookup.TryGetValue(schema.type, out typeref))
                 return typeref;
+             */
 
             if (!_SchemaToCodeTypeReferenceLookup.TryGetValue(schema, out typeref))
             {

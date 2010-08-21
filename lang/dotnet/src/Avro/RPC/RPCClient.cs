@@ -52,7 +52,7 @@ namespace Avro.RPC
             _Stream = new NetworkStream(_Socket, FileAccess.ReadWrite);
         }
 
-        private static readonly Schema MetadataSchema = new ArraySchema(PrimitiveSchema.Bytes);
+        private static readonly Schema MetadataSchema = new ArraySchema(PrimitiveSchema.BYTES);
         private static readonly IDictionary<string, byte[]> EmptyMetadata = new Dictionary<string, byte[]>();
 
         public void Invoke(string name, params Parameter[] parms)

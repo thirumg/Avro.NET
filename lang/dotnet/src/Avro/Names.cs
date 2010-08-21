@@ -21,11 +21,12 @@ using System.Text;
 
 namespace Avro
 {
-    public class Names:Dictionary<Name, Schema>
+    public class Names : Dictionary<Name, NamedSchema>
     {
         public string Space { get; private set; }
 
-        public Names():this(string.Empty)
+        public Names()
+            : this(string.Empty)
         {
 
         }
@@ -34,28 +35,23 @@ namespace Avro
             this.Space = space;
         }
 
-        public Schema this[string s]
+        public NamedSchema this[string s]
         {
             get
             {
-                if (PrimitiveSchema.PrimitiveKeyLookup.ContainsKey(s))
-                    return PrimitiveSchema.Create(s);
-
                 Name name = new Name(s, this.Space);
                 return this[name];
             }
         }
 
-        public bool TryGetValue(string s, out Schema schema)
+        public bool TryGetValue(string s, out NamedSchema schema)
         {
             Name name = new Name(s, this.Space);
 
             return TryGetValue(name, out schema);
         }
 
-
-
-        public new Schema this[Name name]
+        public new NamedSchema this[Name name]
         {
             set
             {
@@ -71,7 +67,7 @@ namespace Avro
         }
 
 
-        public new void Add(Name name, Schema schema)
+        public new void Add(Name name, NamedSchema schema)
         {
             if (null == name) throw new ArgumentNullException("name", "name cannot be null.");
             if (base.ContainsKey(name))
@@ -85,13 +81,13 @@ namespace Avro
             if (!(schema is NamedSchema))
                 return false;
 
-            return ContainsKey(((NamedSchema)schema).Name);
+            return ContainsKey(((NamedSchema)schema).name);
         }
 
-        public void Add(Schema schema)
+        public void Add(NamedSchema schema)
         {
             if (null == schema) throw new ArgumentNullException("schema", "schema cannot be null.");
-            Add(((NamedSchema)schema).Name, schema);
+            Add(schema.name, schema);
         }
     }
 }

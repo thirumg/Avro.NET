@@ -36,9 +36,9 @@ namespace Avro
         {
             
 
-            switch (schema.Type)
+            switch (schema.type)
             {
-                case SchemaType.RECORD: writeRecord(schema, datum, encoder); break;
+                case Schema.Type.RECORD: writeRecord(schema, datum, encoder); break;
                 //    case Schema.ENUM:   writeEnum(schema, datum, encoder);   break;
                 //    case Schema.ARRAY:  writeArray(schema, datum, encoder);  break;
                 //    case Schema.MAP:    writeMap(schema, datum, encoder);    break;

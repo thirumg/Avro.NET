@@ -21,11 +21,11 @@ using System.Text;
 
 namespace Avro
 {
-    public class Name:IEquatable<Name>
+    public class Name : IEquatable<Name>
     {
         private static readonly Logger log = new Logger();
 
-        public String name{ get;private set;}
+        public String name { get; private set; }
         public String space { get; private set; }
         public String full { get; private set; }
 
@@ -38,7 +38,7 @@ namespace Avro
                 return;
             }
 
-            if(!name.Contains("."))
+            if (!name.Contains("."))
             {                          // unqualified name
                 this.space = space;                       // use default space
                 this.name = name;
@@ -49,23 +49,19 @@ namespace Avro
 
                 this.space = string.Join(".", parts, 0, parts.Length - 1);
                 this.name = parts[parts.Length - 1];
-                
-                // qualified name
-                //this.space = name.Substring(0, lastDot);  // get space from name
-                //this.name = name.Substring(lastDot + 1, name.Length-lastDot+1);
             }
             this.full = string.IsNullOrEmpty(this.space) ? this.name : this.space + "." + this.name;
         }
 
         public override int GetHashCode()
         {
-            return string.IsNullOrEmpty(full)? 0 : full.GetHashCode();
+            return string.IsNullOrEmpty(full) ? 0 : full.GetHashCode();
         }
         public override string ToString()
         {
             return full;
         }
-        
+
         //public void writeName(Names names, JsonGenerator gen) throws IOException {
         //  if (name != null) gen.writeStringField("name", name);
         //  if (space != null) {
@@ -76,7 +72,7 @@ namespace Avro
         //  }
         //}
 
-    
+
         public static Name make_fullname(string name, string snamespace)
         {
             if (log.IsDebugEnabled) log.DebugFormat("make_fullname(string, string) - name=\"{0}\", snamespace=\"{1}\"", name, snamespace);
@@ -98,7 +94,7 @@ namespace Avro
             if (!(o is Name)) return false;
             Name that = (Name)o;
             return Equals(that);
-            
+
         }
 
         public bool Equals(Name that)

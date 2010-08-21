@@ -18,26 +18,34 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using Newtonsoft.Json.Linq;
 
 namespace Avro
 {
-    /// <summary>
-    /// 
-    /// </summary>
-    public class MapSchema:Schema
+    public class MapSchema : UnnamedSchema
     {
-        public Schema ValueSchema { get; private set; }
+        internal static MapSchema NewInstance(JToken j, Names names)
+        {
+            JToken t = j["values"];
+            if (null == t)
+            {
+                throw new AvroTypeException("Map does not have 'values'");
+            }
+            return new MapSchema(Schema.ParseJson(t, names));
+        }
+
+        public Schema valueSchema { get; private set; }
         public MapSchema(Schema valueSchema)
-            :base("map")
+            :base(Type.MAP)
         {
             if (null == valueSchema) throw new ArgumentNullException("valueSchema", "valueSchema cannot be null.");
-            this.ValueSchema = valueSchema;
+            this.valueSchema = valueSchema;
         }
 
         protected override void WriteProperties(Newtonsoft.Json.JsonTextWriter writer)
         {
             writer.WritePropertyName("values");
-            ValueSchema.writeJson(writer);
+            valueSchema.writeJson(writer);
         }
     }
 }

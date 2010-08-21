@@ -18,6 +18,7 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using Newtonsoft.Json.Linq;
 
 namespace Avro
 {
@@ -25,8 +26,13 @@ namespace Avro
     {
         public int Size { get; set; }
 
+        internal static FixedSchema NewInstance(JToken j)
+        {
+            return new FixedSchema(GetName(j), JsonHelper.GetRequiredInteger(j, "size"));
+        }
+
         public FixedSchema(Name name, int size)
-            : base("fixed", name, null)
+            : base(Type.FIXED, name)
         {
             if (size <= 0) throw new ArgumentOutOfRangeException("size", "size must be greater than zero.");
             
